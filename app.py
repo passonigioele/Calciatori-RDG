@@ -23,11 +23,11 @@ if uploaded_file:
     def apply_highlight(df):
         styles = pd.DataFrame('', index=df.index, columns=df.columns)
         if len(df) > 0:
-            styles.iloc[0, 0] = 'background-color: yellow'
+            styles.iloc[0, ] = 'background-color: yellow'
         if len(df) > 1:
-            styles.iloc[1, 0] = 'background-color: lightgrey'
+            styles.iloc[1, ] = 'background-color: lightgrey'
         if len(df) > 2:
-            styles.iloc[2, 0] = 'background-color: saddlebrown; color: white'
+            styles.iloc[2, ] = 'background-color: saddlebrown; color: white'
         return styles
 
     styled_df = filtered_players_df.style.apply(lambda _: apply_highlight(filtered_players_df), axis=None)
