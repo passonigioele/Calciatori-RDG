@@ -51,6 +51,17 @@ if uploaded_file:
     # Set minimum column width so they don't shrink
     for col in filtered_players_df.columns:
         gb.configure_column(col, minWidth=120)  # Adjust as needed
+
+    
+    # Set minimum column width and alignment
+    for i, col in enumerate(filtered_players_df.columns):
+        if i == 0:
+            # First column: left-aligned
+            gb.configure_column(col, minWidth=150, cellStyle={'textAlign': 'left'})
+        else:
+            # Other columns: center-aligned
+            gb.configure_column(col, minWidth=120, cellStyle={'textAlign': 'center'})
+
     
     gridOptions = gb.build()
     
