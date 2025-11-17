@@ -63,6 +63,21 @@ if uploaded_file:
             gb.configure_column(col, minWidth=120, cellStyle={'textAlign': 'center'})
 
 
+    
+    #Add row styling using JS function
+    row_style_js = """
+    function(params) {
+        if (params.node.rowIndex === 0) {
+            return {'background-color': 'gold', 'color': 'black', 'font-weight': 'bold'};
+        } else if (params.node.rowIndex === 1) {
+            return {'background-color': 'silver', 'color': 'black', 'font-weight': 'bold'};
+        } else if (params.node.rowIndex === 2) {
+            return {'background-color': '#cd7f32', 'color': 'white', 'font-weight': 'bold'};
+        }
+    }
+    """
+    gb.configure_grid_options(getRowStyle=row_style_js)
+
    
     gridOptions = gb.build()
     
