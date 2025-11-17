@@ -47,23 +47,6 @@ if uploaded_file:
 
     gridOptions = gb.build()
 
-    # Add responsive container with horizontal scroll
-    st.markdown(
-        """
-        <style>
-        .ag-theme-streamlit {
-            overflow-x: auto;  /* Enable horizontal scroll */
-        }
-        @media (max-width: 768px) {
-            .ag-theme-streamlit {
-                width: 100% !important;
-            }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
     AgGrid(
         filtered_players_df,
         gridOptions=gridOptions,
