@@ -19,7 +19,7 @@ if uploaded_file:
     st.subheader("Players Leaderboard")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
 
-    # Display read-only table with formatting for leaderboard
+    # Display read-only table with formatting
     st.dataframe(
         filtered_players_df,
         use_container_width=True,
@@ -75,7 +75,7 @@ if uploaded_file:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-    # Show sorted table with same formatting
+    # Show sorted table
     st.subheader("Players Sorted by Performance")
     st.dataframe(
         players_df,
