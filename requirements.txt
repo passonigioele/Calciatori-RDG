@@ -1,7 +1,7 @@
 streamlit
 pandas
 openpyxl
-st_aggrid
+streamlit-aggrid
 AgGrid
 GridOptionsBuilder
 io
