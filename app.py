@@ -42,7 +42,16 @@ if uploaded_file:
     gb.configure_pagination(enabled=True)
     gridOptions = gb.build()
     
-    gb.configure_grid_options(domLayout='autoHeight')  # Adjust height dynamically
+    
+AgGrid(
+    filtered_players_df,
+    gridOptions=gridOptions,
+    enable_enterprise_modules=False,
+    fit_columns_on_grid_load=True,  # Auto-fit columns
+    height=400,
+    theme="streamlit"  # Optional: better styling
+)
+
 
     st.write("")
     AgGrid(filtered_players_df, gridOptions=gridOptions, enable_enterprise_modules=False)
