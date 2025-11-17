@@ -61,22 +61,7 @@ if uploaded_file:
         )
 
         
-
-        # Highlight top 3 rows
-        def highlight_top_three(row):
-            if row.name == players_df.index[0]:
-                return ['background-color: yellow'] * len(row)
-            elif row.name == players_df.index[1]:
-                return ['background-color: lightgrey'] * len(row)
-            elif row.name == players_df.index[2]:
-                return ['background-color: saddlebrown; color: white'] * len(row)
-            else:
-                return [''] * len(row)
-
-        styled_df = players_df.style.apply(highlight_top_three, axis=1)
-
-
-        
+      
         # Save updated file
         output = BytesIO()
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
