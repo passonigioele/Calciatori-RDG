@@ -6,7 +6,7 @@ from io import BytesIO
 # Page config
 st.set_page_config(page_title="Football Stats Manager", layout="wide")
 st.title("CALCIATORI DI READING ⚽⚽⚽")
-st.subheader("L'importante é esserci")
+#st.subheader("L'importante é esserci")
 
 # File upload
 uploaded_file = "CALCIATORI_RDG.xlsx"
@@ -18,7 +18,7 @@ if uploaded_file:
     lineups_df = pd.read_excel(uploaded_file, sheet_name="Team Lineups", engine="openpyxl")
 
     # Filter players with at least 1 match
-    st.subheader("Overall Leaderboard")
+    st.subheader("Leaderboard")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
     columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "Goal Difference", "Goal Scored", "MVP"]
     filtered_players_df = filtered_players_df[columns_to_display]
