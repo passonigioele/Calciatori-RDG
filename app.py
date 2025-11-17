@@ -19,18 +19,18 @@ if uploaded_file:
     st.subheader("Players Leaderboard")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
 
-    # Highlight first three rows: yellow, grey, brown
-    def highlight_rows(row):
-        if row.name == 0:
-            return ['background-color: yellow'] * len(row)
-        elif row.name == 1:
-            return ['background-color: lightgrey'] * len(row)
-        elif row.name == 2:
-            return ['background-color: saddlebrown; color: white'] * len(row)
-        else:
-            return [''] * len(row)
+    # Highlight first three cells in the first column
+    def apply_highlight(df):
+        styles = pd.DataFrame('', index=df.index, columns=df.columns)
+        if len(df) > 0:
+            styles.iloc[0, 0] = 'background-color: yellow'
+        if len(df) > 1:
+            styles.iloc[1, 0] = 'background-color: lightgrey'
+        if len(df) > 2:
+            styles.iloc[2, 0] = 'background-color: saddlebrown; color: white'
+        return styles
 
-    styled_df = filtered_players_df.style.apply(highlight_rows, axis=1)
+    styled_df = filtered_players_df.style.apply(lambda _: apply_highlight(filtered_players_df), axis=None)
 
     # Render styled table as HTML (read-only)
     st.write(styled_df.to_html(), unsafe_allow_html=True)
@@ -80,8 +80,3 @@ if uploaded_file:
             file_name="Updated_Football_Stats.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
-    # Show sorted table with same highlight
-    st.subheader("Players Sorted by Performance")
-    styled_sorted_df = players_df.style.apply(highlight_rows, axis=1)
-    st.write(styled_sorted_df.to_html(), unsafe_allow_html=True)
