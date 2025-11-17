@@ -47,6 +47,17 @@ if uploaded_file:
 
 
     st.write("")
-    AgGrid(filtered_players_df, gridOptions=gridOptions, enable_enterprise_modules=False)
+    #AgGrid(filtered_players_df, gridOptions=gridOptions, enable_enterprise_modules=False)
+
+
+    AgGrid(
+        filtered_players_df,
+        gridOptions=gridOptions,
+        enable_enterprise_modules=False,
+        fit_columns_on_grid_load=True,  # Auto-fit columns
+        width=400,
+        theme="streamlit"  # Optional: better styling
+    )
+
 
    
