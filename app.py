@@ -43,42 +43,26 @@ if uploaded_file:
     gb = GridOptionsBuilder.from_dataframe(filtered_players_df)
     gb.configure_default_column(editable=False, sortable=True, filter=True)
     gb.configure_pagination(enabled=True)
-    gb.configure_grid_options(domLayout='normal')  # Enable scrolling
-    gb.configure_grid_options(suppressHorizontalScroll=False)
-    gridOptions = gb.build()
 
-    # Disable auto-sizing
+    # Force scrollable layout
+    gb.configure_grid_options(domLayout='normal')  # Allows scrolling
+    gb.configure_grid_options(suppressHorizontalScroll=False)
+    
+    # Set minimum column width so they don't shrink
+    for col in filtered_players_df.columns:
+        gb.configure_column(col, minWidth=120)  # Adjust as needed
+    
+    gridOptions = gb.build()
+    
+    # Disable auto-sizing completely
     gridOptions['suppressAutoSize'] = True
     gridOptions['suppressSizeToFit'] = True
-
-    # Add responsive CSS for mobile
-    st.markdown(
-        """
-        <style>
-        .ag-theme-streamlit {
-            overflow-x: auto;  /* Horizontal scroll */
-            max-width: 100%;
-        }
-        @media (max-width: 768px) {
-            .ag-theme-streamlit {
-                width: 100% !important;
-            }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Render AgGrid
+    
+    # Render AgGrid with fixed height
     AgGrid(
         filtered_players_df,
         gridOptions=gridOptions,
         enable_enterprise_modules=False,
         height=400,  # Fixed height for vertical scroll
-        fit_columns_on_grid_load=False  # Prevent shrinking
+        fit_columns_on_grid_load=False  # Prevent auto-fit
     )
-
-    
-
-
-   
