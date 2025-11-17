@@ -63,20 +63,7 @@ if uploaded_file:
             gb.configure_column(col, minWidth=120, cellStyle={'textAlign': 'center'})
 
 
-    # Add row styling for top 3 rows
-    def row_style(params):
-        if params['node']['rowIndex'] == 0:
-            return {'backgroundColor': 'gold', 'color': 'black', 'fontWeight': 'bold'}
-        elif params['node']['rowIndex'] == 1:
-            return {'backgroundColor': 'silver', 'color': 'black', 'fontWeight': 'bold'}
-        elif params['node']['rowIndex'] == 2:
-            return {'backgroundColor': '#cd7f32', 'color': 'white', 'fontWeight': 'bold'}  # Bronze
-        return {}
-    
-    gb.configure_grid_options(getRowStyle=row_style)
-
-
-    
+   
     gridOptions = gb.build()
     
     # Disable auto-sizing completely
