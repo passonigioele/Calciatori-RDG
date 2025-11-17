@@ -43,14 +43,14 @@ if uploaded_file:
     gridOptions = gb.build()
     
     
-AgGrid(
-    filtered_players_df,
-    gridOptions=gridOptions,
-    enable_enterprise_modules=False,
-    fit_columns_on_grid_load=True,  # Auto-fit columns
-    height=400,
-    theme="streamlit"  # Optional: better styling
-)
+    AgGrid(
+        filtered_players_df,
+        gridOptions=gridOptions,
+        enable_enterprise_modules=False,
+        fit_columns_on_grid_load=True,  # Auto-fit columns
+        height=400,
+        theme="streamlit"  # Optional: better styling
+    )
 
 
     st.write("")
