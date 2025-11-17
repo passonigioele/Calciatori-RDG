@@ -50,15 +50,6 @@ if uploaded_file:
     AgGrid(filtered_players_df, gridOptions=gridOptions, enable_enterprise_modules=False)
 
 
-    
-st.markdown("""
-    <style>
-    .ag-theme-streamlit {
-        overflow-x: auto;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 
 
    
