@@ -17,7 +17,7 @@ if uploaded_file:
 
     # Filter players with at least 1 match
     st.subheader("Overall Leaderboard")
-    filtered_players_df = players_df[players_df["Match Played"] > 0]
+    filtered_players_df = players_df[players_df["Match Played"] > 0, "% Won"]
 
     # Highlight first three cells in the first column
     def apply_highlight(df):
@@ -31,7 +31,6 @@ if uploaded_file:
         return styles
 
     styled_df = filtered_players_df.style.apply(lambda _: apply_highlight(filtered_players_df), axis=None)
-    styled_df = styled_df["Match Played"]
 
     # Render styled table as HTML (read-only)
     st.write(styled_df.to_html(), unsafe_allow_html=True)
