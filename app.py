@@ -5,7 +5,7 @@ from io import BytesIO
 
 # Page config
 st.set_page_config(page_title="Football Stats Manager", layout="wide")
-st.title("⚽ Football Stats Manager")
+st.title("⚽ CALCIATORI DI READING - L'IMPORTANTE É ESSERCI ⚽")
 
 # File upload
 uploaded_file = "CALCIATORI_RDG.xlsx"
