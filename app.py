@@ -36,19 +36,24 @@ if uploaded_file:
 
     styled_df = filtered_players_df.style.apply(lambda _: apply_highlight(filtered_players_df), axis=None)
 
+    
     # Render searchable and sortable table using AgGrid
     gb = GridOptionsBuilder.from_dataframe(filtered_players_df)
     gb.configure_default_column(editable=False, sortable=True, filter=True)
     gb.configure_pagination(enabled=True)
+    gb.configure_grid_options(domLayout='normal')  # Enable scrolling instead of autoHeight
+
     gridOptions = gb.build()
-    gb.configure_grid_options(domLayout='autoWidth')  # Adjust width dynamically
-    
-    
 
-
+    # Add container with fixed height for scrollability
     st.write("")
-    AgGrid(filtered_players_df, gridOptions=gridOptions, enable_enterprise_modules=False)
-
+    AgGrid(
+        filtered_players_df,
+        gridOptions=gridOptions,
+        enable_enterprise_modules=False,
+        height=400,  # Fixed height for scroll
+        fit_columns_on_grid_load=False  # Prevent auto-fit so horizontal scroll works
+    )
 
 
 
