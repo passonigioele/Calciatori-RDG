@@ -18,6 +18,7 @@ if uploaded_file:
     # Filter players with at least 1 match
     st.subheader("Overall Leaderboard")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
+    filtered_players_df = players_df["Match Played"]
 
     # Highlight first three cells in the first column
     def apply_highlight(df):
