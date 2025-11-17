@@ -38,23 +38,47 @@ if uploaded_file:
 
     
     
-    # Render searchable and sortable table using AgGrid
+    # Render searchable and sortable table using AgGrid 
+    # Configure AgGrid
     gb = GridOptionsBuilder.from_dataframe(filtered_players_df)
     gb.configure_default_column(editable=False, sortable=True, filter=True)
     gb.configure_pagination(enabled=True)
-    gb.configure_grid_options(domLayout='normal')  # Normal layout for scroll
-    gb.configure_grid_options(suppressHorizontalScroll=False)  # Allow horizontal scroll
-
+    gb.configure_grid_options(domLayout='normal')  # Enable scrolling
+    gb.configure_grid_options(suppressHorizontalScroll=False)
     gridOptions = gb.build()
 
+    # Disable auto-sizing
+    gridOptions['suppressAutoSize'] = True
+    gridOptions['suppressSizeToFit'] = True
+
+    # Add responsive CSS for mobile
+    st.markdown(
+        """
+        <style>
+        .ag-theme-streamlit {
+            overflow-x: auto;  /* Horizontal scroll */
+            max-width: 100%;
+        }
+        @media (max-width: 768px) {
+            .ag-theme-streamlit {
+                width: 100% !important;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Render AgGrid
     AgGrid(
         filtered_players_df,
         gridOptions=gridOptions,
         enable_enterprise_modules=False,
         height=400,  # Fixed height for vertical scroll
-        fit_columns_on_grid_load=False  # Prevent shrinking columns
+        fit_columns_on_grid_load=False  # Prevent shrinking
     )
 
+    
 
 
    
