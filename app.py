@@ -41,6 +41,7 @@ if uploaded_file:
     gb.configure_default_column(editable=False, sortable=True, filter=True)
     gb.configure_pagination(enabled=True)
     gridOptions = gb.build()
+    gb.configure_grid_options(domLayout='autoWidth')  # Adjust width dynamically
     
     
 
