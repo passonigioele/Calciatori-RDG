@@ -2,9 +2,6 @@ streamlit
 pandas
 openpyxl
 streamlit-aggrid
-AgGrid
-GridOptionsBuilder
-io
-BytesIO
+
 
 
