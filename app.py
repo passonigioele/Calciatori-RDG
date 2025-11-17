@@ -75,13 +75,3 @@ if uploaded_file:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-    # Show sorted table
-    st.subheader("Players Sorted by Performance")
-    st.dataframe(
-        players_df,
-        use_container_width=True,
-        column_config={
-            "Goal/Game": st.column_config.NumberColumn(format="%.2f"),
-            "% Win": st.column_config.NumberColumn(format="%.1f%%")
-        }
-    )
