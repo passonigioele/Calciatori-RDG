@@ -19,13 +19,15 @@ if uploaded_file:
     st.subheader("Players Leaderboard")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
 
-    # Apply styling for better visuals
-    styled_df = filtered_players_df.style.format({
-        "Goal/Game": "{:.2f}",
-        "% Win": "{:.1f}%"
-    }).background_gradient(cmap="Blues", subset=["Games Won", "Goal Scored"])
-
-    st.dataframe(styled_df, use_container_width=True)
+    # Display read-only table with formatting
+    st.dataframe(
+        filtered_players_df,
+        use_container_width=True,
+        column_config={
+            "Goal/Game": st.column_config.NumberColumn(format="%.2f"),
+            "% Win": st.column_config.NumberColumn(format="%.1f%%")
+        }
+    )
 
     # Download button
     if st.button("Download Updated Excel"):
@@ -75,9 +77,11 @@ if uploaded_file:
 
     # Show sorted table
     st.subheader("Players Sorted by Performance")
-    styled_sorted_df = players_df.style.format({
-        "Goal/Game": "{:.2f}",
-        "% Win": "{:.1f}%"
-    }).background_gradient(cmap="Greens", subset=["Games Won", "Goal Scored"])
-
-    st.dataframe(styled_sorted_df, use_container_width=True)
+    st.dataframe(
+        players_df,
+        use_container_width=True,
+        column_config={
+            "Goal/Game": st.column_config.NumberColumn(format="%.2f"),
+            "% Win": st.column_config.NumberColumn(format="%.1f%%")
+        }
+    )
