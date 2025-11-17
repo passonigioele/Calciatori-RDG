@@ -42,7 +42,7 @@ if uploaded_file:
     gb.configure_pagination(enabled=True)
     gridOptions = gb.build()
 
-    st.write("Search and sort the table below:")
+    st.write("")
     AgGrid(filtered_players_df, gridOptions=gridOptions, enable_enterprise_modules=False)
 
    
