@@ -18,7 +18,7 @@ if uploaded_file:
     # Filter players with at least 1 match
     st.subheader("Overall Leaderboard")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
-    columns_to_display = ["Player Name", "Match Played", "Games Won", "Goal Difference"]
+    columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "Goal Difference", "Goal Scored", "MVP"]
     filtered_players_df = filtered_players_df[columns_to_display]
 
     
