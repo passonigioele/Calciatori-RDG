@@ -19,15 +19,21 @@ if uploaded_file:
     st.subheader("Players Leaderboard")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
 
-    # Display read-only table with formatting
-    st.dataframe(
-        filtered_players_df,
-        use_container_width=True,
-        column_config={
-            "Goal/Game": st.column_config.NumberColumn(format="%.2f"),
-            "% Win": st.column_config.NumberColumn(format="%.1f%%")
-        }
-    )
+    # Highlight first three rows: yellow, grey, brown
+    def highlight_rows(row):
+        if row.name == 0:
+            return ['background-color: yellow'] * len(row)
+        elif row.name == 1:
+            return ['background-color: lightgrey'] * len(row)
+        elif row.name == 2:
+            return ['background-color: saddlebrown; color: white'] * len(row)
+        else:
+            return [''] * len(row)
+
+    styled_df = filtered_players_df.style.apply(highlight_rows, axis=1)
+
+    # Render styled table as HTML (read-only)
+    st.write(styled_df.to_html(), unsafe_allow_html=True)
 
     # Download button
     if st.button("Download Updated Excel"):
@@ -75,3 +81,7 @@ if uploaded_file:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
+    # Show sorted table with same highlight
+    st.subheader("Players Sorted by Performance")
+    styled_sorted_df = players_df.style.apply(highlight_rows, axis=1)
+    st.write(styled_sorted_df.to_html(), unsafe_allow_html=True)
