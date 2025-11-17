@@ -16,7 +16,7 @@ if uploaded_file:
     lineups_df = pd.read_excel(uploaded_file, sheet_name="Team Lineups", engine="openpyxl")
 
     # Filter players with at least 1 match
-    st.subheader("Players Leaderboard")
+    st.subheader("Overall Leaderboard")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
 
     # Highlight first three cells in the first column
@@ -31,6 +31,7 @@ if uploaded_file:
         return styles
 
     styled_df = filtered_players_df.style.apply(lambda _: apply_highlight(filtered_players_df), axis=None)
+    styled_df = styled_df["Match Played"]
 
     # Render styled table as HTML (read-only)
     st.write(styled_df.to_html(), unsafe_allow_html=True)
