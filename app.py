@@ -33,15 +33,15 @@ if uploaded_file:
     team_b_label = "Away"
     
     # Create scoreboard visual
-    fig, ax = plt.subplots(figsize=(6, 1))
+    fig, ax = plt.subplots(figsize=(6, 3))
     ax.axis('off')
     ax.set_title(f"Latest Match ({latest_match_df['Date'].iloc[0].strftime("%d %B %Y")})", fontsize=10, fontweight='bold', ha='center')
     
     # Display teams and scores
     ax.text(0.25, 0.6, team_a_label, fontsize=10, ha='center')
     ax.text(0.75, 0.6, team_b_label, fontsize=10, ha='center')
-    ax.text(0.25, 0.2, str(team_a_score), fontsize=20, ha='center', fontweight='bold', color='blue')
-    ax.text(0.75, 0.2, str(team_b_score), fontsize=20, ha='center', fontweight='bold', color='red')
+    ax.text(0.25, 0.3, str(team_a_score), fontsize=20, ha='center', fontweight='bold', color='blue')
+    ax.text(0.75, 0.3, str(team_b_score), fontsize=20, ha='center', fontweight='bold', color='red')
     
     # Add separator
     ax.text(0.5, 0.45, "V", fontsize=10, ha='center')
@@ -57,8 +57,8 @@ if uploaded_file:
 
 
     # Add goal scorers under each team
-    ax.text(0.25, 0.3, team_a_text if team_a_text else "-", fontsize=8, ha='center')
-    ax.text(0.75, 0.3, team_b_text if team_b_text else "-", fontsize=8, ha='center')
+    ax.text(0.25, 0.2, team_a_text if team_a_text else "-", fontsize=,6 ha='center')
+    ax.text(0.75, 0.2, team_b_text if team_b_text else "-", fontsize=6, ha='center')
 
 
 
