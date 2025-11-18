@@ -127,7 +127,7 @@ gb_top.configure_grid_options(domLayout='normal')
 gb_top.configure_grid_options(suppressHorizontalScroll=False)
 
 # Column alignment
-for i, col in enumerate(top_players_df.columns):
+for i, col in enumerate(top_goals_df.columns):
     if i == 0:
         gb_top.configure_column(col, minWidth=150, cellStyle={'textAlign': 'left'})
     else:
