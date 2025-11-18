@@ -4,7 +4,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 from io import BytesIO
 
 # Page config
-st.set_page_config(page_title="Football Stats Manager", layout="wide")
+st.set_page_config(page_title="Calciatori di Reading", layout="wide")
 st.title("CALCIATORI DI READING")
 #st.subheader("L'importante é esserci")
 
