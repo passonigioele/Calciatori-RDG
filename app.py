@@ -19,10 +19,10 @@ if uploaded_file:
 
     # Filter players with at least 1 match
     st.subheader("Leaderboard")
-    filtered_players_df = players_df[players_df["Match Played"] > 0]
+    filtered_players_df = players_df.sort_values(by="Games Won", "Goal Difference", "Goal Scored", "MVP", ascending=False)
+    filtered_players_df = filtered_players_df[filtered_players_df["Match Played"] > 0]
     columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "Goal Difference", "Goal Scored", "MVP"]
     filtered_players_df = filtered_players_df[columns_to_display]
-    filtered_players_df = filtered_players_df.sort_values(by="Games Won", "Goal Difference", "Goal Scored", "MVP", ascending=False)
 
     # Highlight first three rows (entire row)
     def apply_highlight(df):
