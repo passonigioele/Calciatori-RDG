@@ -40,8 +40,8 @@ if uploaded_file:
     # Display teams and scores
     ax.text(0.25, 0.6, team_a_label, fontsize=10, ha='center')
     ax.text(0.75, 0.6, team_b_label, fontsize=10, ha='center')
-    ax.text(0.25, 0.3, str(team_a_score), fontsize=15, ha='center', fontweight='bold', color='blue')
-    ax.text(0.75, 0.3, str(team_b_score), fontsize=15, ha='center', fontweight='bold', color='red')
+    ax.text(0.25, 0.3, str(team_a_score), fontsize=20, ha='center', fontweight='bold', color='blue')
+    ax.text(0.75, 0.3, str(team_b_score), fontsize=20, ha='center', fontweight='bold', color='red')
     
     # Add separator
     ax.text(0.5, 0.45, "vs", fontsize=10, ha='center')
