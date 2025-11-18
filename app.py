@@ -19,6 +19,69 @@ if uploaded_file:
     lineups_df = pd.read_excel(uploaded_file, sheet_name="Team Lineups", engine="openpyxl")
 
 
+
+
+    # Latest match scoreboard
+    latest_match_id = lineups_df.sort_values(by="Date", ascending=False)["Match ID"].iloc[0]
+    latest_match_df = lineups_df[lineups_df["Match ID"] == latest_match_id]
+    
+    # Extract team scores
+    team_a_score = latest_match_df[latest_match_df["Team (A/B)"] == "A"]["Team Score"].iloc[0]
+    team_b_score = latest_match_df[latest_match_df["Team (A/B)"] == "B"]["Team Score"].iloc[0]
+    
+    # Team labels
+    team_a_label = "Home"
+    team_b_label = "Away"
+    
+    # Get goal scorers for each team
+    team_a_scorers = latest_match_df[(latest_match_df["Team (A/B)"] == "A") & (latest_match_df["Goals Scored"] > 0)]
+    team_b_scorers = latest_match_df[(latest_match_df["Team (A/B)"] == "B") & (latest_match_df["Goals Scored"] > 0)]
+    
+    # Create scoreboard visual
+    fig, ax = plt.subplots(figsize=(6, 3))
+    ax.axis('off')
+    
+    # Title
+    match_date = latest_match_df['Date'].iloc[0].strftime("%d %B %Y")
+    ax.set_title(f"Latest Match ({match_date})", fontsize=10, fontweight='bold', ha='center')
+    
+    # Display teams and scores
+    ax.text(0.25, 0.9, team_a_label, fontsize=10, ha='center')
+    ax.text(0.75, 0.9, team_b_label, fontsize=10, ha='center')
+    ax.text(0.25, 0.75, str(team_a_score), fontsize=20, ha='center', fontweight='bold', color='blue')
+    ax.text(0.75, 0.75, str(team_b_score), fontsize=20, ha='center', fontweight='bold', color='red')
+    
+    # Separator
+    ax.text(0.5, 0.8, "VS", fontsize=10, ha='center')
+    
+    # Dynamic spacing for scorers
+    start_y = 0.6
+    line_height = 0.08
+    
+    # Team A scorers
+    if not team_a_scorers.empty:
+        for i, (_, row) in enumerate(team_a_scorers.iterrows()):
+            ax.text(0.25, start_y - i * line_height, f"{row['Player Name']} ({int(row['Goals Scored'])})", fontsize=8, ha='center')
+    else:
+        ax.text(0.25, start_y, "-", fontsize=8, ha='center')
+    
+    # Team B scorers
+    if not team_b_scorers.empty:
+        for i, (_, row) in enumerate(team_b_scorers.iterrows()):
+            ax.text(0.75, start_y - i * line_height, f"{row['Player Name']} ({int(row['Goals Scored'])})", fontsize=8, ha='center')
+    else:
+        ax.text(0.75, start_y, "-", fontsize=8, ha='center')
+
+
+
+
+    
+
+
+
+
+    
+
     #Latest match scoreboard
     # Get latest match ID
     latest_match_id = lineups_df.sort_values(by="Date", ascending=False)["Match ID"].iloc[0]
