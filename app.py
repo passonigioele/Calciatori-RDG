@@ -76,60 +76,7 @@ if uploaded_file:
     
     st.pyplot(fig)
 
-
-    
-
-
-
-
-    
-
-    #Latest match scoreboard
-    # Get latest match ID
-    latest_match_id = lineups_df.sort_values(by="Date", ascending=False)["Match ID"].iloc[0]
-    latest_match_df = lineups_df[lineups_df["Match ID"] == latest_match_id]
-    
-    # Extract team names and scores
-    team_a_score = latest_match_df[latest_match_df["Team (A/B)"] == "A"]["Team Score"].iloc[0]
-    team_b_score = latest_match_df[latest_match_df["Team (A/B)"] == "B"]["Team Score"].iloc[0]
-    
-    # Optional: Team labels
-    team_a_label = "Home"
-    team_b_label = "Away"
-    
-    # Create scoreboard visual
-    fig, ax = plt.subplots(figsize=(6, 3))
-    ax.axis('off')
-    ax.set_title(f"Latest Match ({latest_match_df['Date'].iloc[0].strftime("%d %B %Y")})", fontsize=10, fontweight='bold', ha='center')
-    
-    # Display teams and scores
-    ax.text(0.25, 0.6, team_a_label, fontsize=10, ha='center')
-    ax.text(0.75, 0.6, team_b_label, fontsize=10, ha='center')
-    ax.text(0.25, 0.3, str(team_a_score), fontsize=20, ha='center', fontweight='bold', color='blue')
-    ax.text(0.75, 0.3, str(team_b_score), fontsize=20, ha='center', fontweight='bold', color='red')
-    
-    # Add separator
-    ax.text(0.5, 0.45, "V", fontsize=10, ha='center')
-
-
-    #Get goal scorers for each team
-    team_a_scorers = latest_match_df[(latest_match_df["Team (A/B)"] == "A") & (latest_match_df["Goals Scored"] > 0)]
-    team_b_scorers = latest_match_df[(latest_match_df["Team (A/B)"] == "B") & (latest_match_df["Goals Scored"] > 0)]
-    
-    # Format scorer text
-    team_a_text = "\n".join([f"{row['Player Name']} ({int(row['Goals Scored'])})" for _, row in team_a_scorers.iterrows()])
-    team_b_text = "\n".join([f"{row['Player Name']} ({int(row['Goals Scored'])})" for _, row in team_b_scorers.iterrows()])
-
-
-    # Add goal scorers under each team
-    ax.text(0.25, 0.2, team_a_text if team_a_text else "-", fontsize=6, ha='center')
-    ax.text(0.75, 0.2, team_b_text if team_b_text else "-", fontsize=6, ha='center')
-
-
-
-    
-    #st.pyplot(fig)
-    
+   
 
 
     
