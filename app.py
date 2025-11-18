@@ -38,7 +38,7 @@ if uploaded_file:
     
     # Dynamic figure height based on max scorers
     max_scorers = max(len(team_a_scorers), len(team_b_scorers))
-    fig_height = 2 + (max_scorers)  # Add space per scorer
+    fig_height = 2 + (max_scorers*0.3)  # Add space per scorer
     
     fig, ax = plt.subplots(figsize=(6, fig_height))
     ax.axis('off')
