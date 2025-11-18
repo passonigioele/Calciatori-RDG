@@ -57,7 +57,7 @@ if uploaded_file:
 
 
     # Add goal scorers under each team
-    ax.text(0.25, 0.2, team_a_text if team_a_text else "-", fontsize=,6 ha='center')
+    ax.text(0.25, 0.2, team_a_text if team_a_text else "-", fontsize=6, ha='center')
     ax.text(0.75, 0.2, team_b_text if team_b_text else "-", fontsize=6, ha='center')
 
 
