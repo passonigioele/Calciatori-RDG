@@ -44,7 +44,7 @@ if uploaded_file:
     ax.text(0.75, 0.2, str(team_b_score), fontsize=20, ha='center', fontweight='bold', color='red')
     
     # Add separator
-    ax.text(0.5, 0.45, "vs", fontsize=10, ha='center')
+    ax.text(0.5, 0.45, "V", fontsize=10, ha='center')
     st.pyplot(fig)
     
 
