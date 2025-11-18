@@ -33,7 +33,7 @@ if uploaded_file:
     team_b_label = "Away"
     
     # Create scoreboard visual
-    fig, ax = plt.subplots(figsize=(6, 2))
+    fig, ax = plt.subplots(figsize=(6, 1))
     ax.axis('off')
     ax.set_title(f"Latest Match ({latest_match_df['Date'].iloc[0].strftime("%d %B %Y")})", fontsize=10, fontweight='bold', ha='center')
     
