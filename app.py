@@ -181,6 +181,36 @@ AgGrid(
 )
 
 
+# Top 5 players by MVP
+st.subheader("MVP")
+top_mvp_df = filtered_players_df.sort_values(by="MVP", ascending=False).head(5)
+columns_to_display6 = ["Player Name", "MVP"]
+top_mvp_df = top_mvp_df[columns_to_display6]
+
+# Render using AgGrid for consistency
+gb_top = GridOptionsBuilder.from_dataframe(top_mvp_df)
+gb_top.configure_default_column(editable=False, sortable=True, filter=False)
+gb_top.configure_grid_options(domLayout='normal')
+gb_top.configure_grid_options(suppressHorizontalScroll=False)
+
+# Column alignment
+for i, col in enumerate(top_mvp_df.columns):
+    if i == 0:
+        gb_top.configure_column(col, minWidth=150, cellStyle={'textAlign': 'left'})
+    else:
+        gb_top.configure_column(col, minWidth=120, cellStyle={'textAlign': 'center'})
+
+gridOptions_top = gb_top.build()
+gridOptions_top['suppressAutoSize'] = True
+gridOptions_top['suppressSizeToFit'] = True
+
+AgGrid(
+    top_mvp_df,
+    gridOptions=gridOptions_top,
+    enable_enterprise_modules=False,
+    height=180,  # Smaller height for top 5
+    fit_columns_on_grid_load=False
+)
 
 
 
