@@ -47,7 +47,7 @@ ax.text(0.25, 0.3, str(team_a_score), fontsize=24, ha='center', fontweight='bold
 ax.text(0.75, 0.3, str(team_b_score), fontsize=24, ha='center', fontweight='bold', color='red')
 
 # Add separator
-ax.text(0.5, 0.45, "vs", fontsize=14, ha='center'
+ax.text(0.5, 0.45, "vs", fontsize=14, ha='center')
 
 
 
