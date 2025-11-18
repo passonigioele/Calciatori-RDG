@@ -21,7 +21,7 @@ if uploaded_file:
     st.subheader("Leaderboard")
     st.caption("Sorted by Games Won, Goal Difference, Goal Scored, and MVP")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
-    columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "Goal Difference", "Goal Scored", "MVP"]
+    columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "Goal Difference", "Goal Scored", "Goal Game", "MVP"]
     filtered_players_df = filtered_players_df[columns_to_display]
     columns_to_sort = ["Games Won", "Goal Difference", "Goal Scored", "MVP"]
     filtered_players_df = filtered_players_df.sort_values(by=columns_to_sort, ascending=False)
