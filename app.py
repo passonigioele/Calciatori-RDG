@@ -50,11 +50,11 @@ if uploaded_file:
     # Display teams and scores
     ax.text(0.25, 1.0, team_a_label, fontsize=12, ha='center')
     ax.text(0.75, 1.0, team_b_label, fontsize=12, ha='center')
-    ax.text(0.25, 0.9, str(team_a_score), fontsize=24, ha='center', fontweight='bold', color='blue')
-    ax.text(0.75, 0.9, str(team_b_score), fontsize=24, ha='center', fontweight='bold', color='red')
+    ax.text(0.25, 0.8, str(team_a_score), fontsize=24, ha='center', fontweight='bold', color='blue')
+    ax.text(0.75, 0.8, str(team_b_score), fontsize=24, ha='center', fontweight='bold', color='red')
     
     # Separator
-    ax.text(0.5, 0.95, "VS", fontsize=12, ha='center')
+    ax.text(0.5, 0.8, "VS", fontsize=12, ha='center')
     
     # Dynamic spacing for scorers
     start_y = 0.75
