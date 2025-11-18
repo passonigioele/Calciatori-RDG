@@ -38,7 +38,7 @@ if uploaded_file:
     
     # Dynamic figure height based on max scorers
     max_scorers = max(len(team_a_scorers), len(team_b_scorers))
-    fig_height = 3 + (max_scorers * 0.3)  # Add space per scorer
+    fig_height = 1 + (max_scorers * 0.3)  # Add space per scorer
     
     fig, ax = plt.subplots(figsize=(6, fig_height))
     ax.axis('off')
@@ -48,8 +48,8 @@ if uploaded_file:
     ax.set_title(f"Latest Match ({match_date})", fontsize=12, fontweight='bold', ha='center')
     
     # Display teams and scores
-    ax.text(0.25, 1.0, team_a_label, fontsize=12, ha='center')
-    ax.text(0.75, 1.0, team_b_label, fontsize=12, ha='center')
+    ax.text(0.25, 0.9, team_a_label, fontsize=12, ha='center')
+    ax.text(0.75, 0.9, team_b_label, fontsize=12, ha='center')
     ax.text(0.25, 0.8, str(team_a_score), fontsize=24, ha='center', fontweight='bold', color='blue')
     ax.text(0.75, 0.8, str(team_b_score), fontsize=24, ha='center', fontweight='bold', color='red')
     
