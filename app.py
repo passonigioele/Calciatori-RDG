@@ -109,7 +109,7 @@ AgGrid(
     top_players_df,
     gridOptions=gridOptions_top,
     enable_enterprise_modules=False,
-    height=250,  # Smaller height for top 5
+    height=180,  # Smaller height for top 5
     fit_columns_on_grid_load=False
 )
 
