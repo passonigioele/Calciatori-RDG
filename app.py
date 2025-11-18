@@ -72,7 +72,7 @@ if uploaded_file:
     else:
         ax.text(0.75, start_y, "-", fontsize=8, ha='center')
 
-
+     st.pyplot(fig)
 
 
     
@@ -126,7 +126,7 @@ if uploaded_file:
 
 
     
-    st.pyplot(fig)
+    #st.pyplot(fig)
     
 
 
