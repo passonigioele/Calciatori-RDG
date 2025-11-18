@@ -182,3 +182,35 @@ AgGrid(
 
 
 
+Latest Match Report
+st.subheader("Latest Match Report")
+
+# Ensure matches_df has a date column
+if "Date" in matches_df.columns:
+    # Sort by date to get the latest match
+    latest_match = matches_df.sort_values(by="Date", ascending=False).iloc[0]
+
+    # Extract details
+    match_date = latest_match["Date"].strftime("%d %B %Y")
+    home_team = latest_match["Home Team"]
+    away_team = latest_match["Away Team"]
+    home_score = latest_match["Home Score"]
+    away_score = latest_match["Away Score"]
+    mvp = latest_match.get("MVP", "N/A")  # Handle missing MVP column
+
+    # Display report
+    st.markdown(f"""
+    **Date:** {match_date}  
+    **Match:** {home_team} vs {away_team}  
+    **Score:** {home_score} - {away_score}  
+    **MVP:** {mvp}  
+    """)
+
+    # Optional: Add extra stats if available
+    if "Notes" in latest_match:
+        st.caption(f"Notes: {latest_match['Notes']}")
+else:
+    st.warning("No 'Date' column found in Matches sheet.")
+
+
+
