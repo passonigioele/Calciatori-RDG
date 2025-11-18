@@ -83,8 +83,10 @@ if uploaded_file:
 
 
 # Top 5 players by Match Played
-st.subheader("Top 5 Players by Matches Played")
+st.subheader("Veterans")
 top_players_df = filtered_players_df.sort_values(by="Match Played", ascending=False).head(5)
+columns_to_display2 = ["Player Name", "Match Played"]
+    filtered_players_df = filtered_players_df[columns_to_display2]
 
 # Render using AgGrid for consistency
 gb_top = GridOptionsBuilder.from_dataframe(top_players_df)
