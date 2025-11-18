@@ -33,18 +33,18 @@ if uploaded_file:
     team_b_label = "Team B"
     
     # Create scoreboard visual
-    fig, ax = plt.subplots(figsize=(6, 3))
+    fig, ax = plt.subplots(figsize=(6, 2))
     ax.axis('off')
-    ax.set_title(f"Latest Match ({latest_match_df['Date'].iloc[0]})", fontsize=5, fontweight='bold', ha='center')
+    ax.set_title(f"Latest Match ({latest_match_df['Date'].iloc[0]})", fontsize=7, fontweight='bold', ha='center')
     
     # Display teams and scores
-    ax.text(0.25, 0.6, team_a_label, fontsize=14, ha='center')
-    ax.text(0.75, 0.6, team_b_label, fontsize=14, ha='center')
-    ax.text(0.25, 0.3, str(team_a_score), fontsize=24, ha='center', fontweight='bold', color='blue')
-    ax.text(0.75, 0.3, str(team_b_score), fontsize=24, ha='center', fontweight='bold', color='red')
+    ax.text(0.25, 0.6, team_a_label, fontsize=7, ha='center')
+    ax.text(0.75, 0.6, team_b_label, fontsize=7, ha='center')
+    ax.text(0.25, 0.3, str(team_a_score), fontsize=15, ha='center', fontweight='bold', color='blue')
+    ax.text(0.75, 0.3, str(team_b_score), fontsize=15, ha='center', fontweight='bold', color='red')
     
     # Add separator
-    ax.text(0.5, 0.45, "vs", fontsize=14, ha='center')
+    ax.text(0.5, 0.45, "vs", fontsize=10, ha='center')
     st.pyplot(fig)
     
 
