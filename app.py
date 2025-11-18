@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 from io import BytesIO
+import matplotlib.pyplot as plt
 
 # Page config
 st.set_page_config(page_title="Calciatori di Reading", layout="wide")
@@ -17,6 +18,41 @@ if uploaded_file:
     matches_df = pd.read_excel(uploaded_file, sheet_name="Matches", engine="openpyxl")
     lineups_df = pd.read_excel(uploaded_file, sheet_name="Team Lineups", engine="openpyxl")
 
+
+
+    
+import matplotlib.pyplot as plt
+
+# Get latest match ID
+latest_match_id = lineups_df.sort_values(by="Date", ascending=False)["Match ID"].iloc[0]
+latest_match_df = lineups_df[lineups_df["Match ID"] == latest_match_id]
+
+# Extract team names and scores
+team_a_score = latest_match_df[latest_match_df["Team (A/B)"] == "A"]["Team Score"].iloc[0]
+team_b_score = latest_match_df[latest_match_df["Team (A/B)"] == "B"]["Team Score"].iloc[0]
+
+# Optional: Team labels
+team_a_label = "Team A"
+team_b_label = "Team B"
+
+# Create scoreboard visual
+fig, ax = plt.subplots(figsize=(6, 3))
+ax.axis('off')
+ax.set_title(f"Latest Match Score ({latest_match_df['Date'].iloc[0]})", fontsize=16, fontweight='bold')
+
+# Display teams and scores
+ax.text(0.25, 0.6, team_a_label, fontsize=14, ha='center')
+ax.text(0.75, 0.6, team_b_label, fontsize=14, ha='center')
+ax.text(0.25, 0.3, str(team_a_score), fontsize=24, ha='center', fontweight='bold', color='blue')
+ax.text(0.75, 0.3, str(team_b_score), fontsize=24, ha='center', fontweight='bold', color='red')
+
+# Add separator
+ax.text(0.5, 0.45, "vs", fontsize=14, ha='center'
+
+
+
+
+    
     # Filter players with at least 1 match
     st.subheader("Leaderboard")
     st.caption("Sorted by Games Won, Goal Difference, Goal Scored, and MVP")
@@ -179,6 +215,5 @@ AgGrid(
     height=180,  # Smaller height for top 5
     fit_columns_on_grid_load=False
 )
-
 
 
