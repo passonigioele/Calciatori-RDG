@@ -45,7 +45,7 @@ if uploaded_file:
     
     # Add separator
     ax.text(0.5, 0.45, "vs", fontsize=14, ha='center')
-    
+    st.pyplot(fig)
     
 
 
