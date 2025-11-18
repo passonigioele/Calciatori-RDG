@@ -35,7 +35,7 @@ if uploaded_file:
     # Create scoreboard visual
     fig, ax = plt.subplots(figsize=(6, 3))
     ax.axis('off')
-    ax.set_title(f"Latest Match Score ({latest_match_df['Date']})", fontsize=10, fontweight='bold', ha='center')
+    ax.set_title(f"Latest Match Score ({latest_match_df['Date']iloc[0]})", fontsize=10, fontweight='bold', ha='center')
     
     # Display teams and scores
     ax.text(0.25, 0.6, team_a_label, fontsize=14, ha='center')
