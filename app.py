@@ -182,7 +182,7 @@ AgGrid(
 
 
 
-Latest Match Report
+#Latest Match Report
 st.subheader("Latest Match Report")
 
 # Ensure matches_df has a date column
