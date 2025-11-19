@@ -2,9 +2,8 @@ import streamlit as st
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 from io import BytesIO
-import matplotlib as plt
-#import matplotlib.pyplot as plt
-#import matplotlib as plt2
+import matplotlib.pyplot as plt
+import matplotlib as plt2
 import networkx as nx
 from itertools import combinations
 
