@@ -251,7 +251,7 @@ AgGrid(
 
 
 
- Create graph
+Create graph
 G = nx.Graph()
 
 # Iterate through matches
