@@ -4,8 +4,8 @@ openpyxl
 st-aggrid
 streamlit-aggrid
 matplotlib
-networkx
-itertools
+
+
 
 
 
