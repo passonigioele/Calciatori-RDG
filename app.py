@@ -251,7 +251,7 @@ AgGrid(
 import math
 
 # Step 1: Group players by match
-matches = lineups_df.groupby('Match ID', 'Team (A/B)')['Player Name'].apply(list)
+matches = lineups_df.groupby('Match ID', "Team (A/B)")['Player Name'].apply(list)
 
 # Step 2: Count pairs manually (no itertools)
 edge_counts = {}
