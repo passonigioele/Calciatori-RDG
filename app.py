@@ -249,3 +249,35 @@ AgGrid(
 
 
 
+import networkx as nx
+from itertools import combinations
+
+# Group players by match
+matches = lineups_df.groupby('Match ID')['Player Name'].apply(list)
+
+# Count pairs
+edge_counts = {}
+for players in matches:
+    for pair in combinations(players, 2):
+        pair = tuple(sorted(pair))
+        edge_counts[pair] = edge_counts.get(pair, 0) + 1
+
+# Build graph
+G = nx.Graph()
+for (p1, p2), weight in edge_counts.items():
+    G.add_edge(p1, p2, weight=weight)
+
+# Plot
+fig, ax = plt.subplots(figsize=(8, 6))
+pos = nx.spring_layout(G, seed=42)
+widths = [G[u][v]['weight'] for u,v in G.edges()]
+nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=1000,
+        font_size=10, width=widths)
+edge_labels = nx.get_edge_attributes(G, 'weight')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+
+st.pyplot(fig)
+
+
+
+
