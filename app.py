@@ -3,6 +3,9 @@ import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 from io import BytesIO
 import matplotlib.pyplot as plt
+import networkx as nx
+from itertools import combinations
+
 
 # Page config
 st.set_page_config(page_title="Calciatori di Reading", layout="wide")
@@ -245,5 +248,35 @@ AgGrid(
     height=180,  # Smaller height for top 5
     fit_columns_on_grid_load=False
 )
+
+
+
+ Create graph
+G = nx.Graph()
+
+# Iterate through matches
+for match_id in lineups_df["Match ID"].unique():
+    match_data = lineups_df[lineups_df["Match ID"] == match_id]
+    
+    # Group by team
+    for team in ["A", "B"]:
+        team_players = match_data[match_data["Team (A/B)"] == team]["Player Name"].tolist()
+        
+        # Add edges for all pairs in the same team
+        for p1, p2 in combinations(team_players, 2):
+            if G.has_edge(p1, p2):
+                G[p1][p2]["weight"] += 1
+            else:
+                G.add_edge(p1, p2, weight=1)
+
+# Draw graph with edge thickness based on weight
+pos = nx.spring_layout(G)
+weights = [G[u][v]["weight"] for u, v in G.edges()]
+
+plt.figure(figsize=(10, 8))
+nx.draw(G, pos, with_labels=True, node_color="lightblue", font_size=8, node_size=800,
+        width=weights, edge_color="gray")
+st.pyplot(plt)
+
 
 
