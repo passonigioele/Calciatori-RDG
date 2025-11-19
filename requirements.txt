@@ -1,9 +1,9 @@
 streamlit
 pandas
 openpyxl
-st-aggrid
 streamlit-aggrid
 matplotlib
+
 
 
 
