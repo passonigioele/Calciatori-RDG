@@ -5,7 +5,7 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import matplotlib as plt2
 from itertools import combinations
-
+import networkx as nx
 
 # Page config
 st.set_page_config(page_title="Calciatori di Reading", layout="wide")
