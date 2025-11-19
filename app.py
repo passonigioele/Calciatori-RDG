@@ -82,7 +82,7 @@ if uploaded_file:
     
     # Filter players with at least 1 match
     st.subheader("Leaderboard")
-    st.caption("Sorted by Games Won, Goal Difference, Goal Scored, and MVP. Only players with one or more game played since 13-11-2025 will be visible")
+    st.caption("Sorted by Games Won, Goal Difference, Goal Scored, and MVP. Only players with one or more game played since 13-11-2025 are visible")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
     columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "Goal Difference", "Goal Scored", "Goal/Game", "MVP"]
     filtered_players_df = filtered_players_df[columns_to_display]
@@ -150,6 +150,7 @@ if uploaded_file:
 
 # Top 5 players by Match Played
 st.subheader("Veterani")
+st.caption("Top 5 players by number of matches played")
 top_players_df = filtered_players_df.sort_values(by="Match Played", ascending=False).head(5)
 columns_to_display2 = ["Player Name", "Match Played"]
 top_players_df = top_players_df[columns_to_display2]
@@ -182,6 +183,7 @@ AgGrid(
 
 # Top 5 players by Goal Scored
 st.subheader("Capocannonieri")
+st.caption("Top 5 players by number of goals scored")
 top_goals_df = filtered_players_df.sort_values(by="Goal Scored", ascending=False).head(5)
 columns_to_display3 = ["Player Name", "Goal Scored"]
 top_goals_df = top_goals_df[columns_to_display3]
@@ -214,6 +216,7 @@ AgGrid(
 
 # Top 5 players by MVP
 st.subheader("MVP")
+st.caption("Top 5 players by number of MVP awards")
 top_mvp_df = filtered_players_df.sort_values(by="MVP", ascending=False).head(5)
 columns_to_display6 = ["Player Name", "MVP"]
 top_mvp_df = top_mvp_df[columns_to_display6]
