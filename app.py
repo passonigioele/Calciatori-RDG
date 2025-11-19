@@ -45,7 +45,7 @@ if uploaded_file:
     
     # Title
     match_date = latest_match_df['Date'].iloc[0].strftime("%d %B %Y")
-    ax.set_title(f"Giornata {latest_match_id} ({match_date})", fontsize=12, fontweight='bold', ha='center')
+    ax.set_title(f"{latest_match_id}° Giornata  ({match_date})", fontsize=12, fontweight='bold', ha='center')
     
     # Display teams and scores
     ax.text(0.25, 0.9, team_a_label, fontsize=12, ha='center')
