@@ -246,3 +246,45 @@ AgGrid(
     fit_columns_on_grid_load=False
 )
 
+
+
+import math
+
+# Step 1: Group players by match
+matches = lineups_df.groupby('Match ID', 'Team (A/B)')['Player Name'].apply(list)
+
+# Step 2: Count pairs manually (no itertools)
+edge_counts = {}
+for players in matches:
+    for i in range(len(players)):
+        for j in range(i+1, len(players)):
+            p1, p2 = sorted([players[i], players[j]])
+            key = (p1, p2)
+            edge_counts[key] = edge_counts.get(key, 0) + 1
+
+# Step 3: Prepare nodes and edges
+nodes = list(df['Player Name'].unique())
+edges = [(p1, p2, w) for (p1, p2), w in edge_counts.items()]
+
+# Step 4: Plot manually
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Circular layout
+angle_step = 2 * math.pi / len(nodes)
+positions = {node: (math.cos(i * angle_step), math.sin(i * angle_step)) for i, node in enumerate(nodes)}
+
+# Draw edges
+for p1, p2, w in edges:
+    x1, y1 = positions[p1]
+    x2, y2 = positions[p2]
+    ax.plot([x1, x2], [y1, y2], 'k-', linewidth=w)  # edge thickness = weight
+    mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
+    ax.text(mid_x, mid_y, str(w), fontsize=8, color='red')  # edge label
+
+# Draw nodes
+for node, (x, y) in positions.items():
+    ax.scatter(x, y, s=500, color='lightblue')
+    ax.text(x, y, node, ha='center', va='center', fontsize=10)
+
+ax.axis('off')
+
