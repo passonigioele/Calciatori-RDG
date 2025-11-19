@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Page config
 st.set_page_config(page_title="Calciatori di Reading", layout="wide")
 st.title("CALCIATORI DI READING")
-st.subheader("Data collected since 13 November 2025")
+st.caption("Data collected since 13 November 2025")
 
 # File upload
 uploaded_file = "CALCIATORI_RDG.xlsx"
