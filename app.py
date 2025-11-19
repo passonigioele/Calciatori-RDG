@@ -81,7 +81,7 @@ if uploaded_file:
 
     
     # Filter players with at least 1 match
-    st.subheader("Leaderboard")
+    st.subheader("General Leaderboard")
     st.caption("Sorted by Games Won, Goal Difference, Goal Scored, and MVP. Only players with one or more game played since 13-11-2025 are visible")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
     columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "Goal Difference", "Goal Scored", "Goal/Game", "MVP"]
