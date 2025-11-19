@@ -3,6 +3,7 @@ import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 from io import BytesIO
 import matplotlib.pyplot as plt
+import matplotlib as plt2
 import networkx as nx
 from itertools import combinations
 
@@ -273,10 +274,10 @@ for match_id in lineups_df["Match ID"].unique():
 pos = nx.spring_layout(G)
 weights = [G[u][v]["weight"] for u, v in G.edges()]
 
-plt.figure(figsize=(10, 8))
+plt2.figure(figsize=(10, 8))
 nx.draw(G, pos, with_labels=True, node_color="lightblue", font_size=8, node_size=800,
         width=weights, edge_color="gray")
-st.pyplot(plt)
+st.pyplot(plt2)
 
 
 
