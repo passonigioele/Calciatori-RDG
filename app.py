@@ -84,7 +84,7 @@ if uploaded_file:
     st.subheader("General Leaderboard")
     st.caption("Sorted by Games Won, Games Drew, Goal Difference, Goal Scored, and MVP. Only players with one or more game played since 13-11-2025 are visible")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
-    columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "Goal Difference", "Goal Scored", "Assists", "Goal/Game", "MVP"]
+    columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "Goal Difference", "Goal Scored", "Assists", "Goal/Game", "MVP", "Own Goals"]
     filtered_players_df = filtered_players_df[columns_to_display]
     columns_to_sort = ["Games Won", "Games Drew", "Goal Difference", "Goal Scored", "MVP"]
     filtered_players_df = filtered_players_df.sort_values(by=columns_to_sort, ascending=False)
@@ -283,4 +283,38 @@ AgGrid(
     fit_columns_on_grid_load=False
 )
 
+
+
+
+# Top 5 players by own goals
+st.subheader("Il Re dell'Autogol")
+st.caption("Top 5 players by number of own goals")
+top_og_df = filtered_players_df.sort_values(by="", ascending=False).head(5)
+columns_to_display7 = ["Player Name", "Own Goals"]
+top_mvp_df = top_mvp_df[columns_to_display7]
+
+# Render using AgGrid for consistency
+gb_top = GridOptionsBuilder.from_dataframe(top_mvp_df)
+gb_top.configure_default_column(editable=False, sortable=True, filter=False)
+gb_top.configure_grid_options(domLayout='normal')
+gb_top.configure_grid_options(suppressHorizontalScroll=False)
+
+# Column alignment
+for i, col in enumerate(top_mvp_df.columns):
+    if i == 0:
+        gb_top.configure_column(col, minWidth=150, cellStyle={'textAlign': 'left'})
+    else:
+        gb_top.configure_column(col, minWidth=120, cellStyle={'textAlign': 'center'})
+
+gridOptions_top = gb_top.build()
+gridOptions_top['suppressAutoSize'] = True
+gridOptions_top['suppressSizeToFit'] = True
+
+AgGrid(
+    top_mvp_df,
+    gridOptions=gridOptions_top,
+    enable_enterprise_modules=False,
+    height=180,  # Smaller height for top 5
+    fit_columns_on_grid_load=False
+)
 
