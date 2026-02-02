@@ -289,7 +289,7 @@ AgGrid(
 # Top 5 players by own goals
 st.subheader("Il Re dell'Autogol")
 st.caption("Top 5 players by number of own goals")
-top_og_df = filtered_players_df.sort_values(by="", ascending=False).head(5)
+top_og_df = filtered_players_df.sort_values(by="Own Goals", ascending=False).head(5)
 columns_to_display7 = ["Player Name", "Own Goals"]
 top_og_df = top_og_df[columns_to_display7]
 
