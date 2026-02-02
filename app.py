@@ -291,7 +291,7 @@ st.subheader("Il Re dell'Autogol")
 st.caption("Top 5 players by number of own goals")
 top_og_df = filtered_players_df.sort_values(by="", ascending=False).head(5)
 columns_to_display7 = ["Player Name", "Own Goals"]
-top_mvp_df = top_mvp_df[columns_to_display7]
+top_og_df = top_og_df[columns_to_display7]
 
 # Render using AgGrid for consistency
 gb_top = GridOptionsBuilder.from_dataframe(top_mvp_df)
