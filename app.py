@@ -294,13 +294,13 @@ columns_to_display7 = ["Player Name", "Own Goals"]
 top_og_df = top_og_df[columns_to_display7]
 
 # Render using AgGrid for consistency
-gb_top = GridOptionsBuilder.from_dataframe(top_mvp_df)
+gb_top = GridOptionsBuilder.from_dataframe(top_og_df)
 gb_top.configure_default_column(editable=False, sortable=True, filter=False)
 gb_top.configure_grid_options(domLayout='normal')
 gb_top.configure_grid_options(suppressHorizontalScroll=False)
 
 # Column alignment
-for i, col in enumerate(top_mvp_df.columns):
+for i, col in enumerate(top_og_df.columns):
     if i == 0:
         gb_top.configure_column(col, minWidth=150, cellStyle={'textAlign': 'left'})
     else:
@@ -311,7 +311,7 @@ gridOptions_top['suppressAutoSize'] = True
 gridOptions_top['suppressSizeToFit'] = True
 
 AgGrid(
-    top_mvp_df,
+    top_og_df,
     gridOptions=gridOptions_top,
     enable_enterprise_modules=False,
     height=180,  # Smaller height for top 5
