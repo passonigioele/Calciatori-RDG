@@ -84,7 +84,7 @@ if uploaded_file:
     st.subheader("General Leaderboard")
     st.caption("Sorted by Games Won, Games Drew, Goal Difference, Goal Scored, and MVP. Only players with one or more game played since 13-11-2025 are visible")
     filtered_players_df = players_df[players_df["Match Played"] > 0]
-    columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "Goal Difference", "Goal Scored", "Assists", "Goal/Game", "MVP", "Own Goals"]
+    columns_to_display = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost", "% Win", "Goal Difference", "Goal Scored", "Assists", "Goal/Game", "MVP", "Own Goals"]
     filtered_players_df = filtered_players_df[columns_to_display]
     columns_to_sort = ["Games Won", "Games Drew", "Goal Difference", "Goal Scored", "MVP"]
     filtered_players_df = filtered_players_df.sort_values(by=columns_to_sort, ascending=False)
