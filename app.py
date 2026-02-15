@@ -348,7 +348,7 @@ fig_size = max(6, num_players * 0.7)
 fig, ax = plt.subplots(figsize=(fig_size, fig_size))
 
 # Plot heatmap
-cax = ax.imshow(sheet2_df, aspect='auto', cmap='magma', vmin=0, vmax=20))
+cax = ax.imshow(sheet2_df, aspect='auto', cmap='magma', vmin=0, vmax=20)
 
 # Add colorbar
 fig.colorbar(cax)
