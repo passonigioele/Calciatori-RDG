@@ -318,3 +318,50 @@ AgGrid(
     fit_columns_on_grid_load=False
 )
 
+
+
+
+
+st.subheader("Player Rating Heatmap (Sheet2)")
+st.caption("Heatmap showing player-to-player ratings")
+
+# Load Sheet2
+sheet2_df = pd.read_excel(uploaded_file, sheet_name="Sheet2", engine="openpyxl")
+
+# Remove fully empty columns (Excel formatting artifacts)
+sheet2_df = sheet2_df.dropna(axis=1, how="all")
+
+# Rename first column if needed
+if "Unnamed: 0" in sheet2_df.columns:
+    sheet2_df = sheet2_df.rename(columns={"Unnamed: 0": "Player"})
+
+# Set player column as index
+sheet2_df = sheet2_df.set_index("Player")
+
+# Ensure numeric values only
+sheet2_df = sheet2_df.apply(pd.to_numeric, errors="coerce")
+
+# Dynamic figure size based on number of players
+num_players = len(sheet2_df)
+fig_size = max(6, num_players * 0.6)
+
+fig, ax = plt.subplots(figsize=(fig_size, fig_size))
+
+# Create heatmap
+cax = ax.imshow(sheet2_df, aspect='auto')
+
+# Add colorbar
+fig.colorbar(cax)
+
+# Set ticks
+ax.set_xticks(range(len(sheet2_df.columns)))
+ax.set_yticks(range(len(sheet2_df.index)))
+
+ax.set_xticklabels(sheet2_df.columns, rotation=90)
+ax.set_yticklabels(sheet2_df.index)
+
+ax.set_title("Player-to-Player Ratings Heatmap")
+
+plt.tight_layout()
+
+st.pyplot(fig)
