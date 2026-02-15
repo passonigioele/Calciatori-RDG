@@ -357,8 +357,18 @@ fig.colorbar(cax)
 ax.set_xticks(range(len(sheet2_df.columns)))
 ax.set_yticks(range(len(sheet2_df.index)))
 
-ax.set_xticklabels(sheet2_df.columns, rotation=90)
-ax.set_yticklabels(sheet2_df.index)
+ax.set_xticklabels(sheet2_df.columns, fontsize=12, fontweight='bold, rotation=90)
+ax.set_yticklabels(sheet2_df.index, fontsize=12, fontweight='bold)
+
+ax.tick_params(
+    top=True,
+    bottom=True,
+    labeltop=True,
+    labelbottom=True
+)
+
+# Move ticks position explicitly
+ax.xaxis.set_ticks_position('both')
 
 # 🔥 ADD NUMBERS INSIDE EACH CELL
 for i in range(len(sheet2_df.index)):
@@ -376,7 +386,7 @@ for i in range(len(sheet2_df.index)):
                 fontweight="bold"
             )
 
-ax.set_title("Player-to-Player Ratings Heatmap")
+ax.set_title("Player Pairings")
 
 plt.tight_layout()
 
