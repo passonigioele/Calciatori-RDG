@@ -372,7 +372,7 @@ for i in range(len(sheet2_df.index)):
                 ha="center",
                 va="center",
                 color="white" if value > sheet2_df.values.mean() else "black",
-                fontsize=9,
+                fontsize=15,
                 fontweight="bold"
             )
 
