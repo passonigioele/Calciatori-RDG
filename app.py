@@ -322,8 +322,8 @@ AgGrid(
 
 
 
-st.subheader("Player Rating Heatmap (Sheet2)")
-st.caption("Heatmap showing player-to-player ratings")
+st.subheader("Player Pairing Heatmap")
+st.caption("Number of times each player played with each other player")
 
 # Load Sheet2
 sheet2_df = pd.read_excel(uploaded_file, sheet_name="Sheet2", engine="openpyxl")
@@ -341,13 +341,13 @@ sheet2_df = sheet2_df.set_index("Player")
 # Ensure numeric values only
 sheet2_df = sheet2_df.apply(pd.to_numeric, errors="coerce")
 
-# Dynamic figure size based on number of players
+# Dynamic figure size
 num_players = len(sheet2_df)
-fig_size = max(6, num_players * 0.6)
+fig_size = max(6, num_players * 0.7)
 
 fig, ax = plt.subplots(figsize=(fig_size, fig_size))
 
-# Create heatmap
+# Plot heatmap
 cax = ax.imshow(sheet2_df, aspect='auto')
 
 # Add colorbar
@@ -359,6 +359,22 @@ ax.set_yticks(range(len(sheet2_df.index)))
 
 ax.set_xticklabels(sheet2_df.columns, rotation=90)
 ax.set_yticklabels(sheet2_df.index)
+
+# 🔥 ADD NUMBERS INSIDE EACH CELL
+for i in range(len(sheet2_df.index)):
+    for j in range(len(sheet2_df.columns)):
+        value = sheet2_df.iloc[i, j]
+        if not pd.isna(value):
+            ax.text(
+                j,
+                i,
+                f"{int(value)}",
+                ha="center",
+                va="center",
+                color="white" if value > sheet2_df.values.mean() else "black",
+                fontsize=9,
+                fontweight="bold"
+            )
 
 ax.set_title("Player-to-Player Ratings Heatmap")
 
