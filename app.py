@@ -357,8 +357,8 @@ fig.colorbar(cax)
 ax.set_xticks(range(len(sheet2_df.columns)))
 ax.set_yticks(range(len(sheet2_df.index)))
 
-ax.set_xticklabels(sheet2_df.columns, fontsize=12, fontweight='bold', rotation=90)
-ax.set_yticklabels(sheet2_df.index, fontsize=12, fontweight='bold')
+ax.set_xticklabels(sheet2_df.columns, fontsize=15, fontweight='bold', rotation=90)
+ax.set_yticklabels(sheet2_df.index, fontsize=15, fontweight='bold')
 
 ax.tick_params(
     top=True,
