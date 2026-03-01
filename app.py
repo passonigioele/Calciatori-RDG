@@ -294,6 +294,7 @@ top_perc_df = players_df[players_df["Match Played"] > 5]
 top_perc_df = top_perc_df.sort_values(by="% Win", ascending=False).head(5)
 columns_to_display11 = ["Player Name", "% Win", "Games Won"]
 top_perc_df = top_perc_df[columns_to_display11]
+top_perc_df["% Win"] = top_perc_df["% Win"].round(2)
 
 # Render using AgGrid for consistency
 gb_top = GridOptionsBuilder.from_dataframe(top_perc_df)
