@@ -289,7 +289,7 @@ AgGrid(
 
 
 # Top 5 players by % wins
-st.subheader("Serial winners")
+st.subheader("Serial Winners")
 st.caption("Top 5 players by ratio of games won (only players with more then 5 games played)")
 top_perc_df = players_df[players_df["Match Played"] > 5]
 top_perc_df = top_perc_df.sort_values(by="% Win", ascending=False).head(5)
@@ -316,6 +316,42 @@ gridOptions_top['suppressSizeToFit'] = True
 
 AgGrid(
     top_perc_df,
+    gridOptions=gridOptions_top,
+    enable_enterprise_modules=False,
+    height=180,  # Smaller height for top 5
+    fit_columns_on_grid_load=False
+)
+
+
+
+# Top 5 players by % Lost
+st.subheader("Serial Losers")
+st.caption("Top 5 players by ratio of games lost (only players with more then 5 games played)")
+top_loperc_df = players_df[players_df["Match Played"] > 5]
+top_loperc_df = top_loperc_df.sort_values(by="% Lost", ascending=False).head(5)
+columns_to_display12 = ["Player Name", "% Lost", "Games Lost"]
+top_loperc_df = top_loperc_df[columns_to_display12]
+top_loperc_df["% Lost"] = top_loperc_df["% Lost"].round(2)
+
+# Render using AgGrid for consistency
+gb_top = GridOptionsBuilder.from_dataframe(top_loperc_df)
+gb_top.configure_default_column(editable=False, sortable=True, filter=False)
+gb_top.configure_grid_options(domLayout='normal')
+gb_top.configure_grid_options(suppressHorizontalScroll=False)
+
+# Column alignment
+for i, col in enumerate(top_loperc_df.columns):
+    if i == 0:
+        gb_top.configure_column(col, minWidth=150, cellStyle={'textAlign': 'left'})
+    else:
+        gb_top.configure_column(col, minWidth=120, cellStyle={'textAlign': 'center'})
+
+gridOptions_top = gb_top.build()
+gridOptions_top['suppressAutoSize'] = True
+gridOptions_top['suppressSizeToFit'] = True
+
+AgGrid(
+    top_loperc_df,
     gridOptions=gridOptions_top,
     enable_enterprise_modules=False,
     height=180,  # Smaller height for top 5
