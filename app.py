@@ -88,6 +88,8 @@ if uploaded_file:
     filtered_players_df = filtered_players_df[columns_to_display]
     columns_to_sort = ["Games Won", "Games Drew", "Goal Difference", "Goal Scored", "MVP"]
     filtered_players_df = filtered_players_df.sort_values(by=columns_to_sort, ascending=False)
+    filtered_players_df["% Win"] = filtered_players_df["% Win"].round(2)
+    filtered_players_df["Goal/Game"] = filtered_players_df["Goal/Game"].round(2)
 
     # Highlight first three rows (entire row)
     def apply_highlight(df):
@@ -289,7 +291,7 @@ AgGrid(
 st.subheader("Serial winners")
 st.caption("Top 5 players by ratio of games won (only players with more then 5 games played)")
 top_perc_df = players_df[players_df["Match Played"] > 5]
-top_perc_df = top_perc_df.sort_values(by=round("% Win"), ascending=False).head(5)
+top_perc_df = top_perc_df.sort_values(by="% Win", ascending=False).head(5)
 columns_to_display11 = ["Player Name", "% Win", "Games Won"]
 top_perc_df = top_perc_df[columns_to_display11]
 
