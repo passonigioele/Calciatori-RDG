@@ -287,8 +287,9 @@ AgGrid(
 
 # Top 5 players by % wins
 st.subheader("Serial winners")
-st.caption("Top 5 players by ratio of games won")
-top_perc_df = filtered_players_df.sort_values(by="% Win", ascending=False).head(5)
+st.caption("Top 5 players by ratio of games won (only players with more then 5 games played)")
+top_perc_df = players_df[players_df["Match Played"] > 5]
+top_perc_df = top_perc_df.sort_values(by="% Win", ascending=False).head(5)
 columns_to_display11 = ["Player Name", "% Win", "Games Won"]
 top_perc_df = top_perc_df[columns_to_display11]
 
