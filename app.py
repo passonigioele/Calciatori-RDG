@@ -397,7 +397,7 @@ AgGrid(
 
 
 st.subheader("Player Pairing Heatmap")
-st.caption("Number of times each player played with each other player")
+st.caption("Number of times each player played with each other player. The diagonal shows the number of games played by each player, for reference.")
 
 # Load Sheet2
 sheet2_df = pd.read_excel(uploaded_file, sheet_name="Sheet2", engine="openpyxl")
