@@ -1,7 +1,7 @@
 streamlit
 pandas
 openpyxl
-streamlit-aggrid==0.3.3
+streamlit-aggrid
 matplotlib
 
 
