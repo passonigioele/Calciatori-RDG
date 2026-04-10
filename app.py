@@ -144,7 +144,7 @@ if uploaded_file:
         filtered_players_df,
         gridOptions=gridOptions,
         enable_enterprise_modules=False,
-        height=400,  # Fixed height for vertical scroll
+        height=None,  # Fixed height for vertical scroll
         fit_columns_on_grid_load=False  # Prevent auto-fit
     )
 
