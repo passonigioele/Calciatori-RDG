@@ -12,6 +12,8 @@ st.caption("Data collected since 13 November 2025")
 # File upload
 uploaded_file = "CALCIATORI_RDG.xlsx"
 
+uploaded_file = "https://github.com/passonigioele/Calciatori-RDG/CALCIATORI_RDG.xlsx
+
 if uploaded_file:
     # Load sheets
     players_df = pd.read_excel(uploaded_file, sheet_name="Players", engine="openpyxl")
