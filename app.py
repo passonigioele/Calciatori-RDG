@@ -3,6 +3,7 @@ import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 from io import BytesIO
 import matplotlib.pyplot as plt
+import openpyxl
 
 # Page config
 st.set_page_config(page_title="Calciatori di Reading", layout="wide")
