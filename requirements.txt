@@ -1,5 +1,5 @@
 streamlit==1.55.0
-pandas
+pandas==3.0.1
 openpyxl
 streamlit-aggrid
 matplotlib
