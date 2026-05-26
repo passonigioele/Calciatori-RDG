@@ -465,3 +465,12 @@ ax.set_title("Player Pairings")
 plt.tight_layout()
 
 st.pyplot(fig)
+
+
+with open("CALCIATORI_RDG.xlsx", "rb") as file:
+    st.download_button(
+        label="Download Data",
+        data=file,
+        file_name="data.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
