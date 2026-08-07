@@ -188,7 +188,7 @@ AgGrid(
 st.subheader("Capocannonieri")
 st.caption("Top 5 players by number of goals scored")
 top_goals_df = filtered_players_df.sort_values(by="Goal Scored", ascending=False).head(5)
-columns_to_display3 = ["Player Name", "Goal Scored"]
+columns_to_display3 = ["Player Name", "Goal Scored", "Goal/Game"]
 top_goals_df = top_goals_df[columns_to_display3]
 
 # Render using AgGrid for consistency
