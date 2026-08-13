@@ -4,7 +4,7 @@ import plotly.express as px
 from st_aggrid import AgGrid, GridOptionsBuilder
 from io import BytesIO
 import matplotlib.pyplot as plt
-
+ 
 # Page config
 st.set_page_config(page_title="Calciatori di Reading", layout="wide")
 st.title("CALCIATORI DI READING")
