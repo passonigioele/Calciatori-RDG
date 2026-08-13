@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
+import plotly.express as px
 from st_aggrid import AgGrid, GridOptionsBuilder
 from io import BytesIO
 import matplotlib.pyplot as plt
-import plotly.express as px
 
 # Page config
 st.set_page_config(page_title="Calciatori di Reading", layout="wide")
@@ -394,7 +395,200 @@ AgGrid(
 )
 
 
+# Player progression over time (interactive)
+st.subheader("Andamento Nel Tempo")
+st.caption("Pick a stat and one or more players to see how they've progressed match by match")
 
+# Build one row per player per match, with running totals, from lineups_df
+progress_df = lineups_df.copy()
+progress_df["Date"] = pd.to_datetime(progress_df["Date"])
+
+# Guard against stray leading/trailing spaces in names (e.g. "Elliot " vs
+# "Elliot"), which would otherwise silently split one player into two entries.
+progress_df["Player Name"] = progress_df["Player Name"].astype(str).str.strip()
+
+progress_df = progress_df.sort_values(["Player Name", "Date", "Match ID"])
+
+# Blank cells (no goal/assist that match) come in as NaN, which would poison
+# every cumulative total after them via cumsum(). Treat blanks as 0 instead.
+progress_df["Goals Scored"] = progress_df["Goals Scored"].fillna(0)
+progress_df["Assists"] = progress_df["Assists"].fillna(0)
+
+progress_df["Match Played"] = 1
+progress_df["Win"] = (progress_df["Result"] == "Win").astype(int)
+progress_df["Loss"] = (progress_df["Result"] == "Loss").astype(int)
+
+_grp = progress_df.groupby("Player Name", group_keys=False)
+progress_df["Match Played"] = _grp["Match Played"].cumsum()
+progress_df["Cumulative Goal Scored"] = _grp["Goals Scored"].cumsum()
+progress_df["Cumulative Assists"] = _grp["Assists"].cumsum()
+progress_df["Cumulative Wins"] = _grp["Win"].cumsum()
+progress_df["Cumulative Losses"] = _grp["Loss"].cumsum()
+
+progress_metric_options = {
+    "Match played": "Match Played",
+    "Goal scored": "Goals Scored",
+    "Assists": "Assists",
+    "Cumulative goal scored": "Cumulative Goal Scored",
+    "Cumulative assists": "Cumulative Assists",
+    "Cumulative wins": "Cumulative Wins",
+    "Cumulative losses": "Cumulative Losses",
+}
+
+col_metric, col_players = st.columns([1, 2])
+with col_metric:
+    progress_metric_label = st.selectbox(
+        "Stat (Y axis)", list(progress_metric_options.keys()), index=3
+    )
+    progress_metric_col = progress_metric_options[progress_metric_label]
+
+progress_all_players = sorted(progress_df["Player Name"].dropna().unique())
+progress_default_players = (
+    progress_df.groupby("Player Name")["Cumulative Goal Scored"].max()
+    .sort_values(ascending=False).head(8).index.tolist()
+)
+
+with col_players:
+    progress_chosen_players = st.multiselect(
+        "Players", progress_all_players, default=progress_default_players
+    )
+
+if not progress_chosen_players:
+    st.info("Select at least one player to plot.")
+else:
+    progress_plot_df = progress_df[progress_df["Player Name"].isin(progress_chosen_players)]
+
+    progress_fig = px.line(
+        progress_plot_df,
+        x="Date",
+        y=progress_metric_col,
+        color="Player Name",
+        markers=True,
+        labels={"Date": "Match date", progress_metric_col: progress_metric_label, "Player Name": "Player"},
+    )
+    progress_fig.update_layout(
+        legend_title_text="Player",
+        hovermode="x unified",
+        margin=dict(l=10, r=10, t=20, b=10),
+        height=480,
+    )
+    st.plotly_chart(progress_fig, use_container_width=True)
+
+
+# Automatic balanced team generator
+st.subheader("Generatore Squadre")
+st.caption(
+    "Pick who's available today and get two balanced teams, sized 5\u201310 players each, "
+    "matched up using their season stats (goals/game, assists/game, win rate, MVP/game)."
+)
+
+# --- Build a single 0-1 "Rating" per player from players_df ---
+rating_df = players_df.copy()
+rating_df["Match Played"] = rating_df["Match Played"].fillna(0)
+_mp_safe = rating_df["Match Played"].replace(0, np.nan)  # avoid divide-by-zero
+rating_df["Goals per Game"] = (rating_df["Goal Scored"] / _mp_safe).fillna(0)
+rating_df["Assists per Game"] = (rating_df["Assists"] / _mp_safe).fillna(0)
+rating_df["MVP per Game"] = rating_df["MVP/Game"].fillna(0)
+rating_df["Win Rate"] = rating_df["% Win"].fillna(0)
+
+
+def _normalize(s):
+    lo, hi = s.min(), s.max()
+    if hi - lo < 1e-9:
+        return pd.Series(0.5, index=s.index)
+    return (s - lo) / (hi - lo)
+
+
+rating_df["Rating"] = (
+    0.35 * _normalize(rating_df["Goals per Game"])
+    + 0.25 * _normalize(rating_df["Assists per Game"])
+    + 0.25 * _normalize(rating_df["Win Rate"])
+    + 0.15 * _normalize(rating_df["MVP per Game"])
+)
+player_ratings = dict(zip(rating_df["Player Name"], rating_df["Rating"]))
+
+team_pool = st.multiselect(
+    "Players available today",
+    sorted(player_ratings.keys()),
+    help="Pick everyone who's playing today. You need between 10 and 20 players "
+         "so each team can be 5\u201310 players.",
+)
+
+if "team_gen_seed" not in st.session_state:
+    st.session_state["team_gen_seed"] = 0
+if "team_gen_started" not in st.session_state:
+    st.session_state["team_gen_started"] = False
+
+col_gen, col_regen = st.columns([1, 1])
+generate_clicked = col_gen.button("Genera Squadre", type="primary")
+regenerate_clicked = col_regen.button("Rigenera (nuova combinazione)")
+
+if generate_clicked or regenerate_clicked:
+    st.session_state["team_gen_started"] = True
+if regenerate_clicked:
+    st.session_state["team_gen_seed"] += 1
+
+n_pool = len(team_pool)
+if n_pool == 0:
+    st.info("Select the players available today to generate two teams.")
+elif n_pool < 10 or n_pool > 20:
+    st.warning(
+        f"Select between 10 and 20 players so each team can have 5\u201310 players "
+        f"(currently {n_pool} selected)."
+    )
+elif st.session_state["team_gen_started"]:
+    # even-as-possible split, sizes differ by at most 1
+    size_a = -(-n_pool // 2)  # ceil
+    size_b = n_pool - size_a
+
+    if regenerate_clicked:
+        rng = np.random.default_rng(st.session_state["team_gen_seed"])
+        spread = max(np.std(list(player_ratings.values())), 1e-6)
+        jittered = {
+            p: player_ratings[p] + rng.normal(0, 0.15 * spread) for p in team_pool
+        }
+    else:
+        jittered = {p: player_ratings[p] for p in team_pool}
+
+    # Greedy balance: strongest players first, each goes to whichever team
+    # currently has the lower total rating (respecting the size caps).
+    order = sorted(jittered.items(), key=lambda kv: kv[1], reverse=True)
+    team_a, team_b, sum_a, sum_b = [], [], 0.0, 0.0
+    for name, r in order:
+        can_a = len(team_a) < size_a
+        can_b = len(team_b) < size_b
+        if can_a and (not can_b or sum_a <= sum_b):
+            team_a.append(name)
+            sum_a += r
+        else:
+            team_b.append(name)
+            sum_b += r
+
+    def _team_table(names):
+        t = rating_df[rating_df["Player Name"].isin(names)][
+            ["Player Name", "Rating", "Goals per Game", "Assists per Game", "Win Rate"]
+        ].sort_values("Rating", ascending=False)
+        t["Rating"] = t["Rating"].round(2)
+        t["Goals per Game"] = t["Goals per Game"].round(2)
+        t["Assists per Game"] = t["Assists per Game"].round(2)
+        t["Win Rate"] = (t["Win Rate"] * 100).round(1)
+        t = t.rename(columns={"Win Rate": "Win Rate (%)"})
+        return t
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.markdown(f"**Team A** ({len(team_a)} players)")
+        st.dataframe(_team_table(team_a), hide_index=True, use_container_width=True)
+        st.metric("Team A total rating", round(sum_a, 2))
+    with col_b:
+        st.markdown(f"**Team B** ({len(team_b)} players)")
+        st.dataframe(_team_table(team_b), hide_index=True, use_container_width=True)
+        st.metric("Team B total rating", round(sum_b, 2))
+
+    st.caption(
+        f"Balance gap: {abs(sum_a - sum_b):.2f} total rating points "
+        "(lower is more even). Click Rigenera for a different, still-balanced mix."
+    )
 
 
 st.subheader("Player Pairing Heatmap")
