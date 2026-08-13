@@ -395,8 +395,8 @@ AgGrid(
 
 
 # Player progression over time (interactive)
-st.subheader("Andamento Nel Tempo")
-st.caption("Pick a stat and one or more players to see how they've progressed match by match")
+st.subheader("Trends Over Time")
+st.caption("Pick a stat and one or more players to see match-by-match progression")
 
 # Build one row per player per match, with running totals, from lineups_df
 progress_df = lineups_df.copy()
