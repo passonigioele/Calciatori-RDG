@@ -3,7 +3,7 @@ import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 from io import BytesIO
 import matplotlib.pyplot as plt
-mport plotly.express as px
+import plotly.express as px
 
 # Page config
 st.set_page_config(page_title="Calciatori di Reading", layout="wide")
@@ -480,9 +480,6 @@ in your real app.py). Paste this block wherever you build the app's charts,
 or turn it into its own tab/section.
 """
  
-import pandas as pd
-import plotly.express as px
-import streamlit as st
  
  
 def build_player_timeseries(lineups_df: pd.DataFrame) -> pd.DataFrame:
