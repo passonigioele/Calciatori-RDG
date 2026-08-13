@@ -507,12 +507,29 @@ rating_df["Rating"] = (
 )
 player_ratings = dict(zip(rating_df["Player Name"], rating_df["Rating"]))
 
-team_pool = st.multiselect(
-    "Players available today",
-    sorted(player_ratings.keys()),
-    help="Pick everyone who's playing today. You need between 10 and 20 players "
-         "so each team can be 5\u201310 players.",
+st.markdown("**Players available today**")
+st.caption(
+    "Tick everyone who's playing today. You need between 10 and 20 players "
+    "so each team can be 5\u201310 players."
 )
+
+_all_players = sorted(player_ratings.keys())
+
+col_selall, col_clearall = st.columns([1, 1])
+if col_selall.button("Select all"):
+    for _name in _all_players:
+        st.session_state[f"avail_{_name}"] = True
+if col_clearall.button("Clear all"):
+    for _name in _all_players:
+        st.session_state[f"avail_{_name}"] = False
+
+team_pool = []
+_n_cols = 4
+_ckb_cols = st.columns(_n_cols)
+for _i, _name in enumerate(_all_players):
+    with _ckb_cols[_i % _n_cols]:
+        if st.checkbox(_name, key=f"avail_{_name}"):
+            team_pool.append(_name)
 
 if "team_gen_seed" not in st.session_state:
     st.session_state["team_gen_seed"] = 0
