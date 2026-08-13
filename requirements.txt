@@ -4,7 +4,7 @@ openpyxl
 streamlit-aggrid
 matplotlib
 xlrd
-
+plotly.express
 
 
 
