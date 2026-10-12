@@ -24,7 +24,7 @@ if uploaded_file:
     # Latest match scoreboard with dynamic layout
     latest_match_id = lineups_df.sort_values(by="Date", ascending=False)["Match ID"].iloc[0]
     latest_match_df = lineups_df[lineups_df["Match ID"] == latest_match_id]
-    latest_match_df = len(pd.unique(lineups_df[lineups_df["Match ID"]]))
+    latest_match_id = len(pd.unique(latest_match_id))
     
     # Extract scores
     team_a_score = latest_match_df[latest_match_df["Team (A/B)"] == "A"]["Team Score"].iloc[0]
