@@ -11,8 +11,10 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 # Config
 # ---------------------------------------------------------------------------
 DATA_FILE = "CALCIATORI_RDG.xlsx"
-SEASON_CUTOFF = pd.Timestamp("2026-11-13")  # 2026 Season: <= cutoff, 2027 Season: > cutoff
+SEASON_2026 = (pd.Timestamp("2025-11-13"), pd.Timestamp("2026-11-12"))  # start, end (inclusive)
+SEASON_2027 = (pd.Timestamp("2026-11-19"), pd.Timestamp("2027-11-18"))
 MIN_GAMES_SERIAL = 5  # "Serial Winners / Losers" need MORE than this many games
+MIN_GAMES_RATING = 5  # "Best Performers" needs MORE than this many games
 
 st.set_page_config(page_title="Calciatori di Reading", layout="wide")
 st.title("CALCIATORI DI READING")
@@ -65,6 +67,7 @@ def prepare_matches(df):
     df["Goals Scored"] = df["Goals Scored"].fillna(0)
     df["Assists"] = df["Assists"].fillna(0)
     df["Own Goals"] = to_count(df["Own Goals"])
+    df["Evaluation"] = pd.to_numeric(df["Evaluation"], errors="coerce")  # blanks stay NaN (not rated)
     return df
 
 
@@ -82,6 +85,7 @@ def compute_player_stats(df, mvp_names):
         "Goal Scored": g["Goals Scored"].sum(),
         "Assists": g["Assists"].sum(),
         "Own Goals": g["Own Goals"].sum(),
+        "Average Rating": g["Evaluation"].mean().round(2),  # ignores matches with no rating
     })
     stats["% Win"] = (stats["Games Won"] / stats["Match Played"]).round(2)
     stats["% Lost"] = (stats["Games Lost"] / stats["Match Played"]).round(2)
@@ -95,7 +99,7 @@ def compute_player_stats(df, mvp_names):
 
     columns = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost",
                "% Win", "% Lost", "Goal Difference", "Goal Scored", "Assists",
-               "Goal/Game", "MVP", "Own Goals"]
+               "Goal/Game", "MVP", "Own Goals", "Average Rating"]
     return stats[columns]
 
 
@@ -115,17 +119,22 @@ def compute_pairings(df):
 # Rendering helpers
 # ---------------------------------------------------------------------------
 def render_table(df, key, height=180, leaderboard=False):
+    # Position in the ranking (1 = first row), shown as the left-most column
+    df = df.reset_index(drop=True)
+    df.insert(0, "#", np.arange(1, len(df) + 1))
+
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_default_column(editable=False, sortable=True, filter=leaderboard)
     if leaderboard:
         gb.configure_pagination(enabled=True)
     gb.configure_grid_options(domLayout="normal", suppressHorizontalScroll=False)
-    for i, col in enumerate(df.columns):
-        gb.configure_column(
-            col,
-            minWidth=150 if i == 0 else 120,
-            cellStyle={"textAlign": "left" if i == 0 else "center"},
-        )
+    for col in df.columns:
+        if col == "#":
+            gb.configure_column(col, width=70, minWidth=70, maxWidth=70, cellStyle={"textAlign": "center"})
+        elif col == "Player Name":
+            gb.configure_column(col, minWidth=150, cellStyle={"textAlign": "left"})
+        else:
+            gb.configure_column(col, minWidth=120, cellStyle={"textAlign": "center"})
     opts = gb.build()
     opts["suppressAutoSize"] = True
     opts["suppressSizeToFit"] = True
@@ -142,7 +151,7 @@ def render_table(df, key, height=180, leaderboard=False):
 def render_top5(stats, key, title, caption, sort_col, cols, min_games=0):
     st.subheader(title)
     st.caption(caption)
-    pool = stats[stats["Match Played"] > min_games]
+    pool = stats[(stats["Match Played"] > min_games) & stats[sort_col].notna()]
     if pool.empty:
         st.info("Not enough games yet.")
         return
@@ -236,7 +245,9 @@ def render_heatmap(period_df):
     plt.close(fig)
 
 
-def render_period(period_df, key):
+def render_period(period_df, key, subtitle=None):
+    if subtitle:
+        st.caption(subtitle)
     if period_df.empty:
         st.info("No matches played in this period yet.")
         return
@@ -247,7 +258,8 @@ def render_period(period_df, key):
     # General leaderboard
     st.subheader("General Leaderboard")
     st.caption("Sorted by Games Won, Games Drew, MVP, and Goal Scored. "
-               "Only players with one or more games played in this period are visible")
+               "Only players with one or more games played in this period are visible. "
+               "Average Rating is the mean of the ratings given to the player (blank if never rated).")
     leaderboard = stats.sort_values(
         by=["Games Won", "Games Drew", "MVP", "Goal Scored"], ascending=False
     )
@@ -259,6 +271,11 @@ def render_period(period_df, key):
     render_top5(stats, f"{key}_goals", "Capocannonieri",
                 "Top 5 players by number of goals scored",
                 "Goal Scored", ["Player Name", "Goal Scored", "Goal/Game"])
+    rated = lineups_df.loc[lineups_df["Evaluation"].notna(), "Date"]
+    since = f"; ratings recorded since {fmt(rated.min())}" if not rated.empty else ""
+    render_top5(stats, f"{key}_rating", "Best Performers",
+                f"Top 5 players by average rating (only players with more than {MIN_GAMES_RATING} games played{since})",
+                "Average Rating", ["Player Name", "Average Rating", "Match Played"], min_games=MIN_GAMES_RATING)
     render_top5(stats, f"{key}_assists", "Fantasisti",
                 "Top 5 players by number of assists",
                 "Assists", ["Player Name", "Assists"])
@@ -280,18 +297,33 @@ def render_period(period_df, key):
 
 
 # ---------------------------------------------------------------------------
-# Three views of the same dashboard
+# Three views of the same dashboard (2027 Season, 2026 Season, All Time)
 # ---------------------------------------------------------------------------
-tab_2027, tab_all, tab_2026 = st.tabs(["2027 Season", "All Time", "2026 Season"])
+def fmt(d):
+    return d.strftime("%d %B %Y").lstrip("0")
+
+
+def in_season(season):
+    start, end = season
+    return lineups_df[(lineups_df["Date"] >= start) & (lineups_df["Date"] <= end)]
+
+
+tab_2027, tab_2026, tab_all = st.tabs(["2027 Season", "2026 Season", "All Time"])
 
 with tab_2027:
-    render_period(lineups_df[lineups_df["Date"] > SEASON_CUTOFF], "s2027")
+    render_period(
+        in_season(SEASON_2027), "s2027",
+        f"Season started on {fmt(SEASON_2027[0])} and will finish on {fmt(SEASON_2027[1])}.",
+    )
+
+with tab_2026:
+    render_period(
+        in_season(SEASON_2026), "s2026",
+        f"Season started on {fmt(SEASON_2026[0])} and finished on {fmt(SEASON_2026[1])}.",
+    )
 
 with tab_all:
     render_period(lineups_df, "all")
-
-with tab_2026:
-    render_period(lineups_df[lineups_df["Date"] <= SEASON_CUTOFF], "s2026")
 
 # ---------------------------------------------------------------------------
 # Download
