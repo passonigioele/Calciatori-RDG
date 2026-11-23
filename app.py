@@ -264,7 +264,7 @@ def render_period(period_df, key, subtitle=None, show_best_performers=True):
                "Only players with one or more games played in this period are visible. "
                "Average Rating is the mean of the ratings given to the player (blank if never rated).")
     leaderboard = stats.drop(columns="Rated Games").sort_values(
-        by=["Games Won", "Games Drew", "MVP", "Goal Scored"], ascending=False
+        by=["Games Won", "% Win", "Average Rating", "MVP"], ascending=False
     )
     render_table(leaderboard, key=f"{key}_leaderboard", height=400, leaderboard=True)
 
