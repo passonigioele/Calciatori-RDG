@@ -86,6 +86,7 @@ def compute_player_stats(df, mvp_names):
         "Assists": g["Assists"].sum(),
         "Own Goals": g["Own Goals"].sum(),
         "Average Rating": g["Evaluation"].mean().round(2),  # ignores matches with no rating
+        "Rated Games": g["Evaluation"].count(),  # games where the player has a rating
     })
     stats["% Win"] = (stats["Games Won"] / stats["Match Played"]).round(2)
     stats["% Lost"] = (stats["Games Lost"] / stats["Match Played"]).round(2)
@@ -99,7 +100,7 @@ def compute_player_stats(df, mvp_names):
 
     columns = ["Player Name", "Match Played", "Games Won", "Games Drew", "Games Lost",
                "% Win", "% Lost", "Goal Difference", "Goal Scored", "Assists",
-               "Goal/Game", "MVP", "Own Goals", "Average Rating"]
+               "Goal/Game", "MVP", "Own Goals", "Average Rating", "Rated Games"]
     return stats[columns]
 
 
@@ -148,7 +149,7 @@ def render_table(df, key, height=180, leaderboard=False):
     )
 
 
-def render_top5(stats, key, title, caption, sort_col, cols, min_games=0):
+def render_top5(stats, key, title, caption, sort_col, cols, min_games=0, rename=None):
     st.subheader(title)
     st.caption(caption)
     pool = stats[(stats["Match Played"] > min_games) & stats[sort_col].notna()]
@@ -156,6 +157,8 @@ def render_top5(stats, key, title, caption, sort_col, cols, min_games=0):
         st.info("Not enough games yet.")
         return
     top = pool.sort_values(by=sort_col, ascending=False).head(5)[cols]
+    if rename:
+        top = top.rename(columns=rename)
     render_table(top, key=key)
 
 
@@ -245,7 +248,7 @@ def render_heatmap(period_df):
     plt.close(fig)
 
 
-def render_period(period_df, key, subtitle=None):
+def render_period(period_df, key, subtitle=None, show_best_performers=True):
     if subtitle:
         st.caption(subtitle)
     if period_df.empty:
@@ -260,7 +263,7 @@ def render_period(period_df, key, subtitle=None):
     st.caption("Sorted by Games Won, Games Drew, MVP, and Goal Scored. "
                "Only players with one or more games played in this period are visible. "
                "Average Rating is the mean of the ratings given to the player (blank if never rated).")
-    leaderboard = stats.sort_values(
+    leaderboard = stats.drop(columns="Rated Games").sort_values(
         by=["Games Won", "Games Drew", "MVP", "Goal Scored"], ascending=False
     )
     render_table(leaderboard, key=f"{key}_leaderboard", height=400, leaderboard=True)
@@ -271,11 +274,15 @@ def render_period(period_df, key, subtitle=None):
     render_top5(stats, f"{key}_goals", "Capocannonieri",
                 "Top 5 players by number of goals scored",
                 "Goal Scored", ["Player Name", "Goal Scored", "Goal/Game"])
-    rated = lineups_df.loc[lineups_df["Evaluation"].notna(), "Date"]
-    since = f"; ratings recorded since {fmt(rated.min())}" if not rated.empty else ""
-    render_top5(stats, f"{key}_rating", "Best Performers",
-                f"Top 5 players by average rating (only players with more than {MIN_GAMES_RATING} games played{since})",
-                "Average Rating", ["Player Name", "Average Rating", "Match Played"], min_games=MIN_GAMES_RATING)
+    if show_best_performers:
+        rated = lineups_df.loc[lineups_df["Evaluation"].notna(), "Date"]
+        since = f"; ratings recorded since {fmt(rated.min())}" if not rated.empty else ""
+        render_top5(stats, f"{key}_rating", "Best Performers",
+                    f"Top 5 players by average rating. Match Played counts only the games where the player "
+                    f"was rated. Only players with more than {MIN_GAMES_RATING} games played overall "
+                    f"are included{since}",
+                    "Average Rating", ["Player Name", "Average Rating", "Rated Games"],
+                    min_games=MIN_GAMES_RATING, rename={"Rated Games": "Match Played"})
     render_top5(stats, f"{key}_assists", "Fantasisti",
                 "Top 5 players by number of assists",
                 "Assists", ["Player Name", "Assists"])
@@ -320,6 +327,7 @@ with tab_2026:
     render_period(
         in_season(SEASON_2026), "s2026",
         f"Season started on {fmt(SEASON_2026[0])} and finished on {fmt(SEASON_2026[1])}.",
+        show_best_performers=False,
     )
 
 with tab_all:
