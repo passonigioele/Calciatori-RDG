@@ -260,10 +260,11 @@ def render_period(period_df, key, subtitle=None, show_best_performers=True):
 
     # General leaderboard
     st.subheader("General Leaderboard")
-    st.caption("Sorted by Games Won, % Win, Average Rating and MVP. "
-               "Only players with one or more games played in this period are visible. ")
+    st.caption("Sorted by Games Won, Games Drew, MVP, and Goal Scored. "
+               "Only players with one or more games played in this period are visible. "
+               "Average Rating is the mean of the ratings given to the player (blank if never rated).")
     leaderboard = stats.drop(columns="Rated Games").sort_values(
-        by=["Games Won", "% Win", "Average Rating", "MVP"], ascending=False
+        by=["Games Won", "Games Drew", "MVP", "Goal Scored"], ascending=False
     )
     render_table(leaderboard, key=f"{key}_leaderboard", height=400, leaderboard=True)
 
@@ -303,7 +304,198 @@ def render_period(period_df, key, subtitle=None, show_best_performers=True):
 
 
 # ---------------------------------------------------------------------------
-# Three views of the same dashboard (2027 Season, 2026 Season, All Time)
+# Team generator
+# ---------------------------------------------------------------------------
+TEAM_SIZES = [5, 6, 7, 8, 9]
+TEAM_COUNTS = [2, 4]
+REFERENCE_GAMES = 5   # "average" and "spread" are measured on players with at least this many games
+SHRINK_GAMES = 8      # a player with N games counts N/(N+8) of their stats; the rest is "average"
+SHRINK_RATED = 3      # same idea for Average Rating, based on how many games were rated
+BALANCE_TOLERANCE = 2.0  # splits within this of the best one are treated as equally good (then picked at random)
+
+
+def build_ratings(stats):
+    """Strength and Attack scores (average player ~50, spread ~10) from the All Time stats.
+
+    Per-game stats are turned into z-scores against players with 5+ games, capped at +-3, then
+    pulled towards average for players with few games so a 1-game wonder is not ranked as a star."""
+    s = stats.copy()
+    n = s["Match Played"]
+    ref = n >= REFERENCE_GAMES
+    if ref.sum() < 5:
+        ref = n > 0
+
+    def z(x):
+        sd = x[ref].std(ddof=0)
+        return ((x - x[ref].mean()) / (sd if sd > 0 else 1)).clip(-3, 3)
+
+    shrink = n / (n + SHRINK_GAMES)
+    z_win = z((s["Games Won"] + 0.5 * s["Games Drew"]) / n) * shrink
+    z_gd = z(s["Goal Difference"] / n) * shrink
+    z_goal = z(s["Goal Scored"] / n) * shrink
+    z_ast = z(s["Assists"] / n) * shrink
+    z_mvp = z(s["MVP"] / n) * shrink
+    rated = s["Rated Games"]
+    z_rating = z(s["Average Rating"]).fillna(0) * (rated / (rated + SHRINK_RATED))
+
+    overall = 0.30 * z_win + 0.20 * z_gd + 0.20 * z_goal + 0.15 * z_ast + 0.10 * z_mvp + 0.05 * z_rating
+    attack = 0.6 * z_goal + 0.4 * z_ast
+
+    def scale(x):
+        sd = x[ref].std(ddof=0)
+        return 50 + 10 * x / (sd if sd > 0 else 1)
+
+    out = pd.DataFrame({
+        "Player Name": s["Player Name"],
+        "Strength": scale(overall).round(1),
+        "Attack": scale(attack).round(1),
+        "Matches": n,
+        "Win %": ((s["Games Won"] / n) * 100).round(0).astype(int),
+        "Goals/Game": s["Goal/Game"],
+        "Assists/Game": (s["Assists"] / n).round(2),
+    })
+    return out.set_index("Player Name")
+
+
+def balance_teams(strength, attack, n_teams, team_size, seed, restarts=150):
+    """Split players into equal teams with similar total Strength (and, secondarily, total Attack).
+
+    Random starts + best-swap hill climbing; every distinct good split found is kept and one of
+    those within BALANCE_TOLERANCE of the best is picked at random, so a new seed gives a new split."""
+    strength = np.asarray(strength, float)
+    attack = np.asarray(attack, float)
+    n = len(strength)
+    assert n == n_teams * team_size
+    rng = np.random.default_rng(seed)
+    found = {}
+
+    if n_teams == 2:
+        # Small enough (at most 24,310 splits) to check every one exactly. Player 0 is always in team 1.
+        from itertools import combinations
+        combos = np.array([(0,) + c for c in combinations(range(1, n), team_size - 1)])
+        mask = np.zeros((len(combos), n), bool)
+        mask[np.arange(len(combos))[:, None], combos] = True
+        d_s = 2 * (strength * mask).sum(1) - strength.sum()
+        d_a = 2 * (attack * mask).sum(1) - attack.sum()
+        costs = d_s ** 2 / 2 + 0.25 * d_a ** 2 / 2   # same cost as below, in closed form for two teams
+        good = np.flatnonzero(costs <= costs.min() + BALANCE_TOLERANCE)
+        if len(good) < 4:  # tiny pools: still offer a few of the best splits so "generate again" can vary
+            good = np.argsort(costs)[:4]
+        pick = combos[good[rng.integers(len(good))]]
+        team1 = list(pick)
+        teams = [team1, [i for i in range(n) if i not in set(team1)]]
+        rng.shuffle(teams)
+        return teams, len(good)
+
+    def cost(labels):
+        ts = np.bincount(labels, weights=strength, minlength=n_teams)
+        ta = np.bincount(labels, weights=attack, minlength=n_teams)
+        return float(((ts - ts.mean()) ** 2).sum() + 0.25 * ((ta - ta.mean()) ** 2).sum())
+
+    for _ in range(restarts):
+        labels = rng.permutation(np.repeat(np.arange(n_teams), team_size))
+        while True:
+            ts = np.bincount(labels, weights=strength, minlength=n_teams)
+            ta = np.bincount(labels, weights=attack, minlength=n_teams)
+            ms, ma = ts.mean(), ta.mean()
+            li = labels[:, None]
+            lj = labels[None, :]
+            ds = strength[None, :] - strength[:, None]   # moving j into i's team and i into j's team
+            da = attack[None, :] - attack[:, None]
+            Ti, Tj = ts[li], ts[lj]
+            Ai, Aj = ta[li], ta[lj]
+            delta = (((Ti + ds - ms) ** 2 + (Tj - ds - ms) ** 2 - (Ti - ms) ** 2 - (Tj - ms) ** 2)
+                     + 0.25 * ((Ai + da - ma) ** 2 + (Aj - da - ma) ** 2 - (Ai - ma) ** 2 - (Aj - ma) ** 2))
+            delta = np.where(li == lj, 0.0, delta)
+            k = np.argmin(delta)
+            i, j = divmod(k, n)
+            if delta[i, j] >= -1e-9:
+                break
+            labels[i], labels[j] = labels[j], labels[i]
+        key = tuple(sorted(tuple(np.flatnonzero(labels == t)) for t in range(n_teams)))
+        found[key] = cost(labels)
+
+    best = min(found.values())
+    good = [k for k, c in found.items() if c <= best + BALANCE_TOLERANCE]
+    chosen = list(good[rng.integers(len(good))])
+    rng.shuffle(chosen)
+    return [list(t) for t in chosen], len(good)
+
+
+def render_team_generator(stats):
+    st.subheader("Team Generator")
+    st.caption("Builds balanced teams from the All Time stats. Pick the players who turned up, "
+               "choose how many teams and how many players per team, then generate. "
+               "Press the button again for a different, similarly balanced split.")
+
+    ratings = build_ratings(stats)
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        n_teams = st.radio("Number of teams", TEAM_COUNTS, horizontal=True, key="tg_teams")
+    with col_b:
+        team_size = st.radio("Players per team", TEAM_SIZES, horizontal=True, index=2, key="tg_size")
+    needed = n_teams * team_size
+
+    chosen = st.multiselect("Players available", sorted(ratings.index), key="tg_players")
+    st.caption(f"{len(chosen)} selected, {needed} needed ({n_teams} teams x {team_size}).")
+    if len(chosen) < needed:
+        st.info(f"Select {needed - len(chosen)} more player(s).")
+    elif len(chosen) > needed:
+        st.warning(f"Too many players: remove {len(chosen) - needed} or choose bigger teams.")
+
+    signature = (n_teams, team_size, tuple(sorted(chosen)))
+    ready = len(chosen) == needed
+    if st.button("Generate teams", disabled=not ready, key="tg_go"):
+        seed = st.session_state.get("tg_seed", 0) + 1
+        st.session_state["tg_seed"] = seed
+        pool = ratings.loc[sorted(chosen)]
+        teams, n_options = balance_teams(pool["Strength"], pool["Attack"], n_teams, team_size, seed)
+        st.session_state["tg_result"] = {
+            "signature": signature,
+            "teams": [[pool.index[i] for i in t] for t in teams],
+            "options": n_options,
+        }
+
+    result = st.session_state.get("tg_result")
+    if not ready or not result or result["signature"] != signature:
+        return
+
+    names = "ABCD"
+    cols = st.columns(n_teams)
+    summary = []
+    for t, members in enumerate(result["teams"]):
+        team = ratings.loc[members].sort_values("Strength", ascending=False).reset_index()
+        with cols[t]:
+            st.markdown(f"**Team {names[t]}**")
+            st.dataframe(team[["Player Name", "Strength", "Matches"]], hide_index=True, use_container_width=True)
+        summary.append({
+            "Team": f"Team {names[t]}",
+            "Total Strength": round(team["Strength"].sum(), 1),
+            "Avg Strength": round(team["Strength"].mean(), 1),
+            "Total Attack": round(team["Attack"].sum(), 1),
+            "Avg Win %": round(team["Win %"].mean()),
+        })
+    summary_df = pd.DataFrame(summary)
+    spread = summary_df["Total Strength"].max() - summary_df["Total Strength"].min()
+    st.markdown("**Balance check**")
+    st.dataframe(summary_df, hide_index=True, use_container_width=True)
+    st.caption(f"Strength gap between strongest and weakest team: {spread:.1f} points "
+               f"(a single player is worth about 10). {result['options']} candidate split(s) were considered this round.")
+
+    with st.expander("How is Strength calculated?"):
+        st.markdown(
+            "Each player's **Strength** comes from their All Time stats, per game played: "
+            "win share (wins + half a draw) 30%, goal difference 20%, goals 20%, assists 15%, "
+            "MVP awards 10% and Average Rating 5%. An average regular is about 50 and the spread is about 10.\n\n"
+            f"Players with few games are pulled towards 50 (a player with {SHRINK_GAMES} games counts half of what their "
+            "numbers say), so a lucky one-off match does not make anyone a star. "
+            "**Attack** (goals and assists) is balanced as well, so one team doesn't get all the scorers."
+        )
+
+
+# ---------------------------------------------------------------------------
+# Tabs: 2027 Season, 2026 Season, All Time, Team Generator
 # ---------------------------------------------------------------------------
 def fmt(d):
     return d.strftime("%d %B %Y").lstrip("0")
@@ -314,7 +506,7 @@ def in_season(season):
     return lineups_df[(lineups_df["Date"] >= start) & (lineups_df["Date"] <= end)]
 
 
-tab_2027, tab_2026, tab_all = st.tabs(["2027 Season", "2026 Season", "All Time"])
+tab_2027, tab_2026, tab_all, tab_teams = st.tabs(["2027 Season", "2026 Season", "All Time", "Team Generator"])
 
 with tab_2027:
     render_period(
@@ -331,6 +523,9 @@ with tab_2026:
 
 with tab_all:
     render_period(lineups_df, "all")
+
+with tab_teams:
+    render_team_generator(compute_player_stats(lineups_df, matches_df["MVP"]))
 
 # ---------------------------------------------------------------------------
 # Download
