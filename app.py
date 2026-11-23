@@ -260,7 +260,7 @@ def render_period(period_df, key, subtitle=None, show_best_performers=True):
 
     # General leaderboard
     st.subheader("General Leaderboard")
-    st.caption("Sorted by Games Won, Games Drew, MVP, and Goal Scored. "
+    st.caption("Sorted by Games Won, % Win, Average Rating and MVP. "
                "Only players with one or more games played in this period are visible. "
                "Average Rating is the mean of the ratings given to the player (blank if never rated).")
     leaderboard = stats.drop(columns="Rated Games").sort_values(
