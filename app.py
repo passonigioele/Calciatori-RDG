@@ -424,7 +424,7 @@ def balance_teams(strength, attack, n_teams, team_size, seed, restarts=150):
 
 def render_team_generator(stats):
     st.subheader("Team Generator")
-    st.caption("Builds balanced teams from the All Time stats. Pick the players who turned up, "
+    st.caption("UNDER DEVELOPMENT - Builds balanced teams from the All Time stats. Pick the players who turned up, "
                "choose how many teams and how many players per team, then generate. "
                "Press the button again for a different, similarly balanced split.")
 
@@ -506,7 +506,7 @@ def in_season(season):
     return lineups_df[(lineups_df["Date"] >= start) & (lineups_df["Date"] <= end)]
 
 
-tab_2027, tab_2026, tab_all, tab_teams = st.tabs(["2027 Season", "2026 Season", "All Time", "Team Generator"])
+tab_2027, tab_2026, tab_all, tab_teams = st.tabs(["2027 Season", "2026 Season", "All Time", "Team Generator (Under development)"])
 
 with tab_2027:
     render_period(
