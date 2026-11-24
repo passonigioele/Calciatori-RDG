@@ -610,7 +610,7 @@ def render_team_generator(stats):
         team = ratings.loc[members].sort_values("Strength", ascending=False).reset_index()
         with cols[t]:
             st.markdown(f"**Team {names[t]}**")
-            st.dataframe(team[["Player Name", "Position", "Strength", "Matches"]], hide_index=True, use_container_width=True)
+            st.dataframe(team[["Player Name", "Position", "Matches"]], hide_index=True, use_container_width=True)
         summary.append({
             "Team": f"Team {names[t]}",
             "Players": len(team),
