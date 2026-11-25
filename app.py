@@ -574,6 +574,57 @@ def resolve_positions(pool, roles_map, n_teams):
     return pos
 
 
+def pitch_figure(left_title, left_team, right_title, right_team):
+    """Full pitch, left team attacking to the right, right team attacking to the left. Players are placed by
+    position: defenders nearest their own goal, then midfielders, then forwards. Only names are drawn.
+    Each team is a DataFrame with 'Player Name' and 'Position' (D / M / F / -)."""
+    import textwrap
+    from matplotlib.patches import Rectangle, Ellipse, Arc
+
+    fig, ax = plt.subplots(figsize=(6.4, 4.2))
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+    ax.add_patch(Rectangle((0, 0), 1, 1, color="#3f8f4f", zorder=0))
+    for k in range(10):   # mown stripes
+        if k % 2:
+            ax.add_patch(Rectangle((k * 0.1, 0), 0.1, 1, color="#3a8549", zorder=0))
+    line = dict(color="white", lw=1.6, fill=False, zorder=1)
+    ax.add_patch(Rectangle((0.02, 0.04), 0.96, 0.84, **line))                  # touchlines and goal lines
+    ax.plot([0.5, 0.5], [0.04, 0.88], color="white", lw=1.6, zorder=1)          # halfway line
+    ax.add_patch(Ellipse((0.5, 0.46), 0.14, 0.14 * 6.4 / 4.2, **line))           # centre circle
+    for side in (0, 1):
+        sign = 1 if side == 0 else -1
+        goal_x = 0.02 if side == 0 else 0.98
+        ax.add_patch(Rectangle((goal_x if side == 0 else goal_x - 0.14, 0.23), 0.14, 0.46, **line))   # penalty area
+        ax.add_patch(Rectangle((goal_x if side == 0 else goal_x - 0.05, 0.35), 0.05, 0.22, **line))   # goal area
+        ax.plot([goal_x, goal_x], [0.40, 0.52], color="white", lw=5, zorder=1, solid_capstyle="butt")   # goal
+        ax.add_patch(Arc((goal_x + sign * 0.10, 0.46), 0.10, 0.16, theta1=-60 if side == 0 else 120,
+                         theta2=60 if side == 0 else 240, color="white", lw=1.6, zorder=1))          # penalty arc
+    ax.text(0.03, 0.95, f"{left_title}  \u2192", ha="left", va="center", fontsize=13, fontweight="bold")
+    ax.text(0.97, 0.95, f"\u2190  {right_title}", ha="right", va="center", fontsize=13, fontweight="bold")
+
+    depth = {"D": 0.15, "M": 0.30, "F": 0.43}   # distance from own goal line, as a share of the pitch length
+    colours = {"D": "#1f5fbf", "M": "#e0a800", "F": "#d1342f", "-": "#6b6b6b"}
+    for team, facing_right in ((left_team, True), (right_team, False)):
+        for letter, d in depth.items():
+            group = team[team["Position"] == letter]
+            if letter == "M":   # players with no position sit in midfield (grey)
+                group = pd.concat([group, team[~team["Position"].isin(depth)]])
+            n = len(group)
+            for i, (name, pos) in enumerate(zip(group["Player Name"], group["Position"])):
+                y = 0.04 + 0.84 * (i + 1) / (n + 1)
+                x = d + (0.035 if n >= 5 and i % 2 else 0)   # stagger crowded lines
+                x = x if facing_right else 1 - x
+                ax.add_patch(Ellipse((x, y), 0.04, 0.04 * 6.4 / 4.2, color=colours[pos if pos in depth else "-"],
+                                     ec="white", lw=1.5, zorder=3))
+                label = "\n".join(textwrap.wrap(name, 10, break_long_words=False)) or name
+                ax.text(x, y - 0.05, label, ha="center", va="top", fontsize=8, color="white", fontweight="bold",
+                        zorder=4, bbox=dict(boxstyle="round,pad=0.15", fc=(0, 0, 0, 0.45), ec="none"))
+    fig.tight_layout(pad=0.3)
+    return fig
+
+
 def balance_by_position(strength, groups, n_teams, seed, restarts=200):
     """Split players into `n_teams` teams, position by position.
 
@@ -712,11 +763,13 @@ def render_team_generator(stats):
     names = "ABCD"
     cols = st.columns(n_teams)
     summary = []
+    team_frames = []
     for t, members in enumerate(result["teams"]):
         team = ratings.loc[members].copy()
         team["Position"] = [final_pos[p] for p in team.index]
         team["_order"] = team["Position"].map(POSITION_ORDER).fillna(3)
         team = team.sort_values(["_order", "Strength"], ascending=[True, False]).reset_index()   # D, M, F, then the rest
+        team_frames.append(team)
         with cols[t]:
             st.markdown(f"**Team {names[t]}**")
             shown = team[["Player Name", "Position", "Listed", "Matches"]].copy()
@@ -733,6 +786,13 @@ def render_team_generator(stats):
             "No position": int((team["Position"] == "-").sum()),
             "Avg Win %": round(team["Win %"].mean()),
         })
+    st.markdown("**Pitch view**")
+    for first in range(0, len(team_frames) - 1, 2):   # 2 teams = one pitch; 4 teams = two pitches (A v B, C v D)
+        fig = pitch_figure(f"Team {names[first]}", team_frames[first], f"Team {names[first + 1]}", team_frames[first + 1])
+        st.pyplot(fig, use_container_width=True)
+        plt.close(fig)
+    st.caption("Left team attacks to the right, right team to the left. Defenders (blue) are nearest their own goal, "
+               "then midfielders (yellow), then forwards (red). Players with no position are shown in grey in midfield.")
     summary_df = pd.DataFrame(summary)
     st.markdown("**Balance check**")
     st.dataframe(summary_df, hide_index=True, use_container_width=True)
