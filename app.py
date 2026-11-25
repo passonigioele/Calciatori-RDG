@@ -745,8 +745,7 @@ def render_team_generator(stats):
     with st.expander("All players: position, Strength, Impact and MVP awards"):
         full = ratings[~ratings.index.isin(list(NEW_PLAYERS))].reset_index().sort_values(["Strength", "Matches"], ascending=False)
         full.insert(0, "#", np.arange(1, len(full) + 1))
-        st.dataframe(full[["#", "Player Name", "Listed", "Position", "Strength", "Forward", "Midfielder", "Defender",
-                           "Impact", "MVP", "Matches"]], hide_index=True, use_container_width=True)
+        st.dataframe(full[["#", "Player Name", "Listed", "Position", "Matches"]], hide_index=True, use_container_width=True)
 
 
 # ---------------------------------------------------------------------------
