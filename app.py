@@ -644,11 +644,7 @@ def render_team_generator(stats):
     ratings = add_new_players(ratings)
     roles_map = {**positions_map, **{k: ((v,) if v else ()) for k, v in NEW_PLAYERS.items()}}
     n_teams = st.radio("Number of teams", TEAM_COUNTS, horizontal=True, key="tg_teams")
-    chosen = st.multiselect("Players available", sorted(p for p in ratings.index if p not in NEW_PLAYERS) + list(NEW_PLAYERS),
-                            key="tg_players",
-                            help="The 'New ...' slots are for people with no stats yet. They get the average Strength of the regulars.")
-
-    # Quick buttons: the 15 players with the most games. Click to add or remove from the list above.
+    # Quick buttons: the 15 players with the most games. Click to add or remove from the "All players" list below.
     top15 = list(ratings[~ratings.index.isin(list(NEW_PLAYERS))].sort_values(["Matches", "Strength"], ascending=False).head(15).index)
 
     def toggle_player(player):
@@ -659,13 +655,31 @@ def render_team_generator(stats):
             current.append(player)
         st.session_state["tg_players"] = current
 
+    st.markdown("**Players available**")
     st.caption("Quick pick: the 15 players with the most games. Click to add or remove.")
+    # Small, tightly packed buttons (the CSS needs a Streamlit version that supports container keys; without it
+    # the buttons just keep the default look).
+    st.markdown(
+        "<style>"
+        ".st-key-tg_quick_box [data-testid='stHorizontalBlock']{flex-wrap:wrap;gap:0.25rem;row-gap:0.25rem;}"
+        ".st-key-tg_quick_box [data-testid='stColumn'],.st-key-tg_quick_box [data-testid='column']"
+        "{width:auto!important;min-width:0!important;flex:0 0 auto!important;}"
+        ".st-key-tg_quick_box button{padding:0.1rem 0.55rem;min-height:1.7rem;font-size:0.8rem;line-height:1.2;}"
+        "</style>", unsafe_allow_html=True)
+    try:
+        box = st.container(key="tg_quick_box")
+    except TypeError:
+        box = st.container()
     selected_now = st.session_state.get("tg_players", [])
-    for start in range(0, len(top15), 5):
-        for col, player in zip(st.columns(5), top15[start:start + 5]):
+    with box:
+        for col, player in zip(st.columns(len(top15)), top15):
             col.button(player, key=f"tg_quick_{player}",
                        type="primary" if player in selected_now else "secondary",
-                       on_click=toggle_player, args=(player,), use_container_width=True)
+                       on_click=toggle_player, args=(player,))
+
+    chosen = st.multiselect("All players", sorted(p for p in ratings.index if p not in NEW_PLAYERS) + list(NEW_PLAYERS),
+                            key="tg_players",
+                            help="The 'New ...' slots are for people with no stats yet. They get the average Strength of the regulars.")
     minimum = MIN_PER_TEAM * n_teams
     ready = len(chosen) >= minimum
     if ready:
