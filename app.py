@@ -742,7 +742,7 @@ def render_team_generator(stats):
             + (" **Manual adjustments** (set by hand): "
                + ", ".join(f"{k} {v:+.0f}" for k, v in MANUAL_ADJUSTMENT.items()) + "." if MANUAL_ADJUSTMENT else "")
         )
-    with st.expander("All players: position, Strength, Impact and MVP awards"):
+    with st.expander("All players' positions"):
         full = ratings[~ratings.index.isin(list(NEW_PLAYERS))].reset_index().sort_values(["Strength", "Matches"], ascending=False)
         full.insert(0, "#", np.arange(1, len(full) + 1))
         st.dataframe(full[["#", "Player Name", "Listed", "Position", "Matches"]], hide_index=True, use_container_width=True)
