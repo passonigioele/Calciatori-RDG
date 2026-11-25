@@ -644,7 +644,7 @@ def render_team_generator(stats):
     ratings = add_new_players(ratings)
     roles_map = {**positions_map, **{k: ((v,) if v else ()) for k, v in NEW_PLAYERS.items()}}
     n_teams = st.radio("Number of teams", TEAM_COUNTS, horizontal=True, key="tg_teams")
-    chosen = st.multiselect("Players available (if there are new players, there are "New Player" options at the bottom of the list)", sorted(p for p in ratings.index if p not in NEW_PLAYERS) + list(NEW_PLAYERS),
+    chosen = st.multiselect("Players available (if there are new players, there are New Player options at the bottom of the list)", sorted(p for p in ratings.index if p not in NEW_PLAYERS) + list(NEW_PLAYERS),
                             key="tg_players",
                             help="The 'New ...' slots are for people with no stats yet. They get the average Strength of the regulars.")
     minimum = MIN_PER_TEAM * n_teams
