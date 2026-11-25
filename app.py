@@ -661,9 +661,10 @@ def render_team_generator(stats):
     # the buttons just keep the default look).
     st.markdown(
         "<style>"
-        ".st-key-tg_quick_box [data-testid='stHorizontalBlock']{flex-wrap:wrap;gap:0.25rem;row-gap:0.25rem;}"
-        ".st-key-tg_quick_box [data-testid='stColumn'],.st-key-tg_quick_box [data-testid='column']"
-        "{width:auto!important;min-width:0!important;flex:0 0 auto!important;}"
+        ".st-key-tg_quick_box,.st-key-tg_quick_box>[data-testid='stVerticalBlock']"
+        "{flex-direction:row!important;flex-wrap:wrap!important;gap:0.25rem!important;align-items:center;}"
+        ".st-key-tg_quick_box [data-testid='stElementContainer'],.st-key-tg_quick_box [data-testid='element-container']"
+        "{width:auto!important;flex:0 0 auto!important;min-width:0!important;}"
         ".st-key-tg_quick_box button{padding:0.1rem 0.55rem;min-height:1.7rem;font-size:0.8rem;line-height:1.2;}"
         "</style>", unsafe_allow_html=True)
     try:
@@ -672,10 +673,10 @@ def render_team_generator(stats):
         box = st.container()
     selected_now = st.session_state.get("tg_players", [])
     with box:
-        for col, player in zip(st.columns(len(top15)), top15):
-            col.button(player, key=f"tg_quick_{player}",
-                       type="primary" if player in selected_now else "secondary",
-                       on_click=toggle_player, args=(player,))
+        for player in top15:   # no columns: Streamlit stacks columns one per row on phones, plain buttons just wrap
+            st.button(player, key=f"tg_quick_{player}",
+                      type="primary" if player in selected_now else "secondary",
+                      on_click=toggle_player, args=(player,))
 
     chosen = st.multiselect("All players", sorted(p for p in ratings.index if p not in NEW_PLAYERS) + list(NEW_PLAYERS),
                             key="tg_players",
