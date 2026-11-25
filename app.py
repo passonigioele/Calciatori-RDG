@@ -679,21 +679,76 @@ def balance_by_position(strength, groups, n_teams, seed, restarts=200):
     return [list(t) for t in chosen], len(good)
 
 
-@fragment
-def render_team_generator(stats):
-    st.subheader("Team Generator")
+def show_teams(ratings, teams, final_pos, note=""):
+    """Shared display: one table per team, the pitch, the balance check and the Strength explanation.
+    `teams` is a list of lists of player names; `final_pos` maps each player to D / M / F / -."""
+    names = "ABCD"
+    n_teams = len(teams)
+    cols = st.columns(n_teams)
+    summary = []
+    team_frames = []
+    for t, members in enumerate(teams):
+        team = ratings.loc[members].copy()
+        team["Position"] = [final_pos[p] for p in team.index]
+        team["_order"] = team["Position"].map(POSITION_ORDER).fillna(3)
+        team = team.sort_values(["_order", "Strength"], ascending=[True, False]).reset_index()   # D, M, F, then the rest
+        team_frames.append(team)
+        with cols[t]:
+            st.markdown(f"**Team {names[t]}**")
+            shown = team[["Player Name", "Position", "Listed", "Matches"]].copy()
+            shown["Position"] = shown["Position"].map(POSITION_NAMES)
+            st.dataframe(shown.rename(columns={"Listed": "Can play"}), hide_index=True, use_container_width=True)
+        summary.append({
+            "Team": f"Team {names[t]}",
+            "Players": len(team),
+            "Total Strength": round(team["Strength"].sum(), 1),
+            "Avg Strength": round(team["Strength"].mean(), 1),
+            "Defenders": int((team["Position"] == "D").sum()),
+            "Midfielders": int((team["Position"] == "M").sum()),
+            "Forwards": int((team["Position"] == "F").sum()),
+            "No position": int((team["Position"] == "-").sum()),
+            "Avg Win %": round(team["Win %"].mean()),
+        })
+    st.markdown("**Pitch view**")
+    for first in range(0, len(team_frames) - 1, 2):   # 2 teams = one pitch; 4 teams = two pitches (A v B, C v D)
+        fig = pitch_figure(f"Team {names[first]}", team_frames[first], f"Team {names[first + 1]}", team_frames[first + 1])
+        st.pyplot(fig, use_container_width=True)
+        plt.close(fig)
+    st.caption("Left team attacks to the right, right team to the left. Defenders (blue) are nearest their own goal, "
+               "then midfielders (yellow), then forwards (red). Players with no position are shown in grey in midfield.")
+    summary_df = pd.DataFrame(summary)
+    st.markdown("**Balance check**")
+    st.dataframe(summary_df, hide_index=True, use_container_width=True)
+    gap = summary_df["Avg Strength"].max() - summary_df["Avg Strength"].min()
+    st.caption(f"Gap in average Strength between the strongest and weakest team: {gap:.1f} points. " + note)
+
+    with st.expander("How is Strength calculated?"):
+        st.markdown(
+            "**Strength** is based on each player's **Impact**: how much better (or worse) their team does "
+            "when they play, measured in goals per match. Every match in the spreadsheet is used. A team's goal "
+            "difference is explained by who played on each side, and all matches are solved together, so a player is "
+            "credited for results *after accounting for their teammates and their opponents* (not just their own goals). "
+            "Blowouts count as at most 5 goals. **Players with few games are penalised**: a player keeps only "
+            f"games / (games + {IMPACT_EXTRA_SHRINK}) of their rating (for example about {2 / (2 + IMPACT_EXTRA_SHRINK):.0%} with 2 games, "
+            f"{8 / (8 + IMPACT_EXTRA_SHRINK):.0%} with 8, {30 / (30 + IMPACT_EXTRA_SHRINK):.0%} with 30), "
+            "so a great run over a handful of matches does not make anyone a star.\n\n"
+            "**MVP awards** are then added as a bonus: the first award counts about 80% of a full "
+            f"award, each further award counts fully, up to {MVP_CAP}. Each full award is worth "
+            f"{MVP_GOALS_PER_AWARD} goals per match of Impact (setting `MVP_GOALS_PER_AWARD`), reduced by the same few-games penalty. "
+            f"**Goals scored per game** add a bonus too: {GOALS_WEIGHT} goals per match of Impact for each standard deviation "
+            "above the average regular **of the same position** (a defender is compared with defenders, a forward with forwards; below average counts against), with the same few-games penalty. "
+            f"**Assists per game** work the same way, at {ASSISTS_WEIGHT} per standard deviation.\n\n"
+            "Strength rescales Impact so an average regular is about 50 and the spread is about 10."
+            + (" **Manual adjustments** (set by hand): "
+               + ", ".join(f"{k} {v:+.0f}" for k, v in MANUAL_ADJUSTMENT.items()) + "." if MANUAL_ADJUSTMENT else "")
+        )
+
+
+def render_auto(ratings, roles_map):
     st.caption("Builds balanced teams from the All Time stats. Pick the players who turned up and choose 2 or 4 teams. "
                "Players are split by position first, so every team gets the same number of defenders, midfielders and "
                "forwards, then balanced on Strength. Press the button again for a different, similarly balanced split.")
 
-    ratings = assign_positions(build_ratings(stats, player_impact(lineups_df), positions_map),
-                               stats, player_off_def(lineups_df), positions_map)
-    if unknown_positions:
-        st.warning("Position labels not recognised (ignored): " + ", ".join(unknown_positions)
-                   + ". Use Defender, Midfielder or Forward.")
-
-    ratings = add_new_players(ratings)
-    roles_map = {**positions_map, **{k: ((v,) if v else ()) for k, v in NEW_PLAYERS.items()}}
     n_teams = st.radio("Number of teams", TEAM_COUNTS, horizontal=True, key="tg_teams")
     # Quick buttons: the 15 players with the most games. Click to add or remove from the "All players" list below.
     top15 = list(ratings[~ratings.index.isin(list(NEW_PLAYERS))].sort_values(["Matches", "Strength"], ascending=False).head(15).index)
@@ -759,47 +814,8 @@ def render_team_generator(stats):
     if not ready or not result or result["signature"] != signature:
         return
 
-    final_pos = result.get("positions") or ratings["Position"].to_dict()
-    names = "ABCD"
-    cols = st.columns(n_teams)
-    summary = []
-    team_frames = []
-    for t, members in enumerate(result["teams"]):
-        team = ratings.loc[members].copy()
-        team["Position"] = [final_pos[p] for p in team.index]
-        team["_order"] = team["Position"].map(POSITION_ORDER).fillna(3)
-        team = team.sort_values(["_order", "Strength"], ascending=[True, False]).reset_index()   # D, M, F, then the rest
-        team_frames.append(team)
-        with cols[t]:
-            st.markdown(f"**Team {names[t]}**")
-            shown = team[["Player Name", "Position", "Listed", "Matches"]].copy()
-            shown["Position"] = shown["Position"].map(POSITION_NAMES)
-            st.dataframe(shown.rename(columns={"Listed": "Can play"}), hide_index=True, use_container_width=True)
-        summary.append({
-            "Team": f"Team {names[t]}",
-            "Players": len(team),
-            "Total Strength": round(team["Strength"].sum(), 1),
-            "Avg Strength": round(team["Strength"].mean(), 1),
-            "Defenders": int((team["Position"] == "D").sum()),
-            "Midfielders": int((team["Position"] == "M").sum()),
-            "Forwards": int((team["Position"] == "F").sum()),
-            "No position": int((team["Position"] == "-").sum()),
-            "Avg Win %": round(team["Win %"].mean()),
-        })
-    st.markdown("**Pitch view**")
-    for first in range(0, len(team_frames) - 1, 2):   # 2 teams = one pitch; 4 teams = two pitches (A v B, C v D)
-        fig = pitch_figure(f"Team {names[first]}", team_frames[first], f"Team {names[first + 1]}", team_frames[first + 1])
-        st.pyplot(fig, use_container_width=True)
-        plt.close(fig)
-    st.caption("Left team attacks to the right, right team to the left. Defenders (blue) are nearest their own goal, "
-               "then midfielders (yellow), then forwards (red). Players with no position are shown in grey in midfield.")
-    summary_df = pd.DataFrame(summary)
-    st.markdown("**Balance check**")
-    st.dataframe(summary_df, hide_index=True, use_container_width=True)
-    gap = summary_df["Avg Strength"].max() - summary_df["Avg Strength"].min()
-    st.caption(f"Gap in average Strength between the strongest and weakest team: {gap:.1f} points. "
+    show_teams(ratings, result["teams"], result.get("positions") or ratings["Position"].to_dict(),
                f"{result['options']} candidate split(s) were considered this round.")
-
     with st.expander("How are the teams built?"):
         st.markdown(
             "1. **Every player is placed in one position.** A player listed in one position is placed there. "
@@ -816,27 +832,43 @@ def render_team_generator(stats):
             "5. **Strength is balanced within those groups.** Players of the same position are swapped between teams "
             "until the teams' Strength is as even as possible, and one of the best splits is picked at random."
         )
-    with st.expander("How is Strength calculated?"):
-        st.markdown(
-            "**Strength** is based on each player's **Impact**: how much better (or worse) their team does "
-            "when they play, measured in goals per match. Every match in the spreadsheet is used. A team's goal "
-            "difference is explained by who played on each side, and all matches are solved together, so a player is "
-            "credited for results *after accounting for their teammates and their opponents* (not just their own goals). "
-            "Blowouts count as at most 5 goals. **Players with few games are penalised**: a player keeps only "
-            f"games / (games + {IMPACT_EXTRA_SHRINK}) of their rating (for example about {2 / (2 + IMPACT_EXTRA_SHRINK):.0%} with 2 games, "
-            f"{8 / (8 + IMPACT_EXTRA_SHRINK):.0%} with 8, {30 / (30 + IMPACT_EXTRA_SHRINK):.0%} with 30), "
-            "so a great run over a handful of matches does not make anyone a star.\n\n"
-            "**MVP awards** are then added as a bonus: the first award counts about 80% of a full "
-            f"award, each further award counts fully, up to {MVP_CAP}. Each full award is worth "
-            f"{MVP_GOALS_PER_AWARD} goals per match of Impact (setting `MVP_GOALS_PER_AWARD`), reduced by the same few-games penalty. "
-            f"**Goals scored per game** add a bonus too: {GOALS_WEIGHT} goals per match of Impact for each standard deviation "
-            "above the average regular **of the same position** (a defender is compared with defenders, a forward with forwards; below average counts against), with the same few-games penalty. "
-            f"**Assists per game** work the same way, at {ASSISTS_WEIGHT} per standard deviation.\n\n"
-            "Strength rescales Impact so an average regular is about 50 and the spread is about 10."
-            + (" **Manual adjustments** (set by hand): "
-               + ", ".join(f"{k} {v:+.0f}" for k, v in MANUAL_ADJUSTMENT.items()) + "." if MANUAL_ADJUSTMENT else "")
-        )
 
+
+def render_manual(ratings):
+    st.caption("Build the teams yourself: pick the players for each team. A player can only be in one team. "
+               "Everything else (tables, pitch, balance check) is shown as in the Automatic tab.")
+    n_teams = st.radio("Number of teams", TEAM_COUNTS, horizontal=True, key="mt_teams")
+    everyone = sorted(p for p in ratings.index if p not in NEW_PLAYERS) + list(NEW_PLAYERS)
+    keys = [f"mt_team_{t}" for t in range(n_teams)]
+    picked = {k: list(st.session_state.get(k, [])) for k in keys}
+    cols = st.columns(n_teams)
+    for t, k in enumerate(keys):
+        taken = {p for other, ps in picked.items() if other != k for p in ps}
+        with cols[t]:
+            st.multiselect(f"Team {'ABCD'[t]}", [p for p in everyone if p not in taken], key=k)
+    teams = [list(st.session_state.get(k, [])) for k in keys]
+    if any(len(t) == 0 for t in teams):
+        st.info("Add at least one player to every team to see the teams.")
+        return
+    show_teams(ratings, teams, ratings["Position"].to_dict())
+
+
+@fragment
+def render_team_generator(stats):
+    st.subheader("Team Generator")
+    ratings = assign_positions(build_ratings(stats, player_impact(lineups_df), positions_map),
+                               stats, player_off_def(lineups_df), positions_map)
+    if unknown_positions:
+        st.warning("Position labels not recognised (ignored): " + ", ".join(unknown_positions)
+                   + ". Use Defender, Midfielder or Forward.")
+
+    ratings = add_new_players(ratings)
+    roles_map = {**positions_map, **{k: ((v,) if v else ()) for k, v in NEW_PLAYERS.items()}}
+    tab_auto, tab_manual = st.tabs(["Automatic", "Manual mode"])
+    with tab_auto:
+        render_auto(ratings, roles_map)
+    with tab_manual:
+        render_manual(ratings)
 
 
 # ---------------------------------------------------------------------------
