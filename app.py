@@ -509,6 +509,71 @@ def assign_positions(ratings, stats, off_def, positions):
     return r
 
 
+# Slots for people who turn up with no stats: name -> position (None = no position). They get the average Strength.
+NEW_PLAYERS = {
+    "New defender 1": "Defender", "New defender 2": "Defender",
+    "New midfielder 1": "Midfielder", "New midfielder 2": "Midfielder",
+    "New forward 1": "Forward", "New forward 2": "Forward",
+    "New player 1": None, "New player 2": None,
+}
+POSITION_ORDER = {"D": 0, "M": 1, "F": 2}   # display order inside a team: defenders, midfielders, forwards, the rest
+POSITION_NAMES = {"D": "Defender", "M": "Midfielder", "F": "Forward", "-": "No position"}
+
+
+def add_new_players(ratings):
+    """Adds the 'New ...' slots, each with the average Strength (and Win %) of the regular players."""
+    reg = ratings["Matches"] >= REFERENCE_GAMES
+    if reg.sum() < 5:
+        reg = ratings["Matches"] > 0
+    avg = round(float(ratings.loc[reg, "Strength"].mean()), 1)
+    win = int(round(ratings.loc[reg, "Win %"].mean()))
+    rows = []
+    for name, role in NEW_PLAYERS.items():
+        letter = role[0] if role else "-"
+        rows.append({"Player Name": name, "Strength": avg, "Impact": 0.0, "MVP": 0, "Attack": 50.0, "Matches": 0,
+                     "Win %": win, "Forward": 50.0, "Midfielder": 50.0, "Defender": 50.0,
+                     "Listed": letter, "Position": letter})
+    new = pd.DataFrame(rows).set_index("Player Name")[list(ratings.columns)]
+    return pd.concat([ratings, new])
+
+
+def resolve_positions(pool, roles_map, n_teams):
+    """Final position of every selected player.
+
+    Everyone starts in the position he is best at. A player who can play several positions is only moved to
+    another of his listed positions when a position lacks players (fewer than one per team), and only if that
+    can fully fix the shortage without leaving another position short. Players who lose the least rating
+    by moving are moved first."""
+    letter_to_role = {r[0]: r for r in ROLES}
+    pos = pool["Position"].to_dict()
+    options = {p: list(roles_map.get(p, ())) for p in pool.index}
+    flexible = [p for p in pool.index if len(options[p]) > 1]
+
+    def counts(assign):
+        return {r[0]: sum(1 for v in assign.values() if v == r[0]) for r in ROLES}
+
+    changed = True
+    while changed:
+        changed = False
+        c = counts(pos)
+        for role in sorted(ROLES, key=lambda r: c[r[0]]):
+            letter = role[0]
+            if counts(pos)[letter] >= n_teams:
+                continue
+            trial = dict(pos)
+            while counts(trial)[letter] < n_teams:
+                c = counts(trial)
+                donors = [p for p in flexible if role in options[p] and trial[p] != letter and c[trial[p]] > n_teams]
+                if not donors:
+                    break
+                p = min(donors, key=lambda p: pool.loc[p, letter_to_role[trial[p]]] - pool.loc[p, role])
+                trial[p] = letter
+            if counts(trial)[letter] >= n_teams:
+                pos = trial
+                changed = True
+    return pos
+
+
 def balance_by_position(strength, groups, n_teams, seed, restarts=200):
     """Split players into `n_teams` teams, position by position.
 
@@ -576,8 +641,12 @@ def render_team_generator(stats):
         st.warning("Position labels not recognised (ignored): " + ", ".join(unknown_positions)
                    + ". Use Defender, Midfielder or Forward.")
 
+    ratings = add_new_players(ratings)
+    roles_map = {**positions_map, **{k: ((v,) if v else ()) for k, v in NEW_PLAYERS.items()}}
     n_teams = st.radio("Number of teams", TEAM_COUNTS, horizontal=True, key="tg_teams")
-    chosen = st.multiselect("Players available", sorted(ratings.index), key="tg_players")
+    chosen = st.multiselect("Players available", sorted(p for p in ratings.index if p not in NEW_PLAYERS) + list(NEW_PLAYERS),
+                            key="tg_players",
+                            help="The 'New ...' slots are for people with no stats yet. They get the average Strength of the regulars.")
     minimum = MIN_PER_TEAM * n_teams
     ready = len(chosen) >= minimum
     if ready:
@@ -592,9 +661,11 @@ def render_team_generator(stats):
         seed = st.session_state.get("tg_seed", 0) + 1
         st.session_state["tg_seed"] = seed
         pool = ratings.loc[sorted(chosen)]
-        teams, n_options = balance_by_position(pool["Strength"], pool["Position"], n_teams, seed)
+        final_pos = resolve_positions(pool, roles_map, n_teams)
+        teams, n_options = balance_by_position(pool["Strength"], [final_pos[p] for p in pool.index], n_teams, seed)
         st.session_state["tg_result"] = {
             "signature": signature,
+            "positions": final_pos,
             "teams": [[pool.index[i] for i in t] for t in teams],
             "options": n_options,
         }
@@ -603,14 +674,20 @@ def render_team_generator(stats):
     if not ready or not result or result["signature"] != signature:
         return
 
+    final_pos = result.get("positions") or ratings["Position"].to_dict()
     names = "ABCD"
     cols = st.columns(n_teams)
     summary = []
     for t, members in enumerate(result["teams"]):
-        team = ratings.loc[members].sort_values("Strength", ascending=False).reset_index()
+        team = ratings.loc[members].copy()
+        team["Position"] = [final_pos[p] for p in team.index]
+        team["_order"] = team["Position"].map(POSITION_ORDER).fillna(3)
+        team = team.sort_values(["_order", "Strength"], ascending=[True, False]).reset_index()   # D, M, F, then the rest
         with cols[t]:
             st.markdown(f"**Team {names[t]}**")
-            st.dataframe(team[["Player Name", "Position", "Matches"]], hide_index=True, use_container_width=True)
+            shown = team[["Player Name", "Position", "Listed", "Strength", "Matches"]].copy()
+            shown["Position"] = shown["Position"].map(POSITION_NAMES)
+            st.dataframe(shown.rename(columns={"Listed": "Can play"}), hide_index=True, use_container_width=True)
         summary.append({
             "Team": f"Team {names[t]}",
             "Players": len(team),
@@ -632,12 +709,17 @@ def render_team_generator(stats):
     with st.expander("How are the teams built?"):
         st.markdown(
             "1. **Every player is placed in one position.** A player listed in one position is placed there. "
-            "A player listed in two (for example Defender and Midfielder) is placed in the one where his own rating is "
-            "highest. Players with no position in the sheet form a separate group (shown as -).\n"
+            "Players with no position in the sheet form a separate group. Teams are shown defenders first, then "
+            "midfielders, then forwards.\n"
             "2. **Each position group is dealt out evenly.** With 2 teams, a group of 4 defenders gives 2 to each team. "
             "If a group doesn't divide exactly, the spare players go to the teams with the fewest "
             "players so far, so team sizes never differ by more than one.\n"
-            "3. **Strength is balanced within those groups.** Players of the same position are swapped between teams "
+            "3. **A player who can play several positions** starts in the one he is best at. He is only moved to another "
+            "of his listed positions when that position has fewer players than teams (so a team would have none), "
+            "and the player who loses the least by moving goes first.\n"
+            "4. **New players:** the 'New ...' slots are for people with no stats. They get the average Strength of the "
+            "regulars and the position in their name ('New player' has no position).\n"
+            "5. **Strength is balanced within those groups.** Players of the same position are swapped between teams "
             "until the teams' Strength is as even as possible, and one of the best splits is picked at random."
         )
     with st.expander("How is Strength calculated?"):
@@ -660,10 +742,11 @@ def render_team_generator(stats):
             + (" **Manual adjustments** (set by hand): "
                + ", ".join(f"{k} {v:+.0f}" for k, v in MANUAL_ADJUSTMENT.items()) + "." if MANUAL_ADJUSTMENT else "")
         )
-    with st.expander("All players' position"):
-        full = ratings.reset_index().sort_values(["Strength", "Matches"], ascending=False)
+    with st.expander("All players: position, Strength, Impact and MVP awards"):
+        full = ratings[~ratings.index.isin(list(NEW_PLAYERS))].reset_index().sort_values(["Strength", "Matches"], ascending=False)
         full.insert(0, "#", np.arange(1, len(full) + 1))
-        st.dataframe(full[["#", "Player Name", "Listed", "Position"]], hide_index=True, use_container_width=True)
+        st.dataframe(full[["#", "Player Name", "Listed", "Position", "Strength", "Forward", "Midfielder", "Defender",
+                           "Impact", "MVP", "Matches"]], hide_index=True, use_container_width=True)
 
 
 # ---------------------------------------------------------------------------
