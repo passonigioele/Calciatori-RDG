@@ -644,9 +644,28 @@ def render_team_generator(stats):
     ratings = add_new_players(ratings)
     roles_map = {**positions_map, **{k: ((v,) if v else ()) for k, v in NEW_PLAYERS.items()}}
     n_teams = st.radio("Number of teams", TEAM_COUNTS, horizontal=True, key="tg_teams")
-    chosen = st.multiselect("Players available (if there are new players, there are New Player options at the bottom of the list)", sorted(p for p in ratings.index if p not in NEW_PLAYERS) + list(NEW_PLAYERS),
+    chosen = st.multiselect("Players available", sorted(p for p in ratings.index if p not in NEW_PLAYERS) + list(NEW_PLAYERS),
                             key="tg_players",
                             help="The 'New ...' slots are for people with no stats yet. They get the average Strength of the regulars.")
+
+    # Quick buttons: the 15 players with the most games. Click to add or remove from the list above.
+    top15 = list(ratings[~ratings.index.isin(list(NEW_PLAYERS))].sort_values(["Matches", "Strength"], ascending=False).head(15).index)
+
+    def toggle_player(player):
+        current = list(st.session_state.get("tg_players", []))
+        if player in current:
+            current.remove(player)
+        else:
+            current.append(player)
+        st.session_state["tg_players"] = current
+
+    st.caption("Quick pick: the 15 players with the most games. Click to add or remove.")
+    selected_now = st.session_state.get("tg_players", [])
+    for start in range(0, len(top15), 5):
+        for col, player in zip(st.columns(5), top15[start:start + 5]):
+            col.button(player, key=f"tg_quick_{player}",
+                       type="primary" if player in selected_now else "secondary",
+                       on_click=toggle_player, args=(player,), use_container_width=True)
     minimum = MIN_PER_TEAM * n_teams
     ready = len(chosen) >= minimum
     if ready:
@@ -700,11 +719,11 @@ def render_team_generator(stats):
             "Avg Win %": round(team["Win %"].mean()),
         })
     summary_df = pd.DataFrame(summary)
-    gap = summary_df["Avg Strength"].max() - summary_df["Avg Strength"].min()
     st.markdown("**Balance check**")
     st.dataframe(summary_df, hide_index=True, use_container_width=True)
-    st.caption(f"Gap in average Strength between the strongest and weakest team: {gap:.1f} points "
-               f"(a single player is worth about 10). {result['options']} candidate split(s) were considered this round.")
+    gap = summary_df["Avg Strength"].max() - summary_df["Avg Strength"].min()
+    st.caption(f"Gap in average Strength between the strongest and weakest team: {gap:.1f} points. "
+               f"{result['options']} candidate split(s) were considered this round.")
 
     with st.expander("How are the teams built?"):
         st.markdown(
@@ -742,10 +761,7 @@ def render_team_generator(stats):
             + (" **Manual adjustments** (set by hand): "
                + ", ".join(f"{k} {v:+.0f}" for k, v in MANUAL_ADJUSTMENT.items()) + "." if MANUAL_ADJUSTMENT else "")
         )
-    with st.expander("All players' positions"):
-        full = ratings[~ratings.index.isin(list(NEW_PLAYERS))].reset_index().sort_values(["Strength", "Matches"], ascending=False)
-        full.insert(0, "#", np.arange(1, len(full) + 1))
-        st.dataframe(full[["#", "Player Name", "Listed", "Position", "Matches"]], hide_index=True, use_container_width=True)
+
 
 
 # ---------------------------------------------------------------------------
